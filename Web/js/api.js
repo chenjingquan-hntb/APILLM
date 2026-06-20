@@ -1,126 +1,270 @@
 /**
  * APILLM Frontend — API Client
- * 封装与后端 API 的交互，处理认证、错误、流式响应
+ * 封装 fetch 调用，处理 JWT / API Key 双认证
  */
-const APILLM = (() => {
-  // --- 配置 ---
-  let baseUrl = localStorage.getItem('apillm_base_url') || 'http://127.0.0.1:8000';
-  let apiKey = localStorage.getItem('apillm_api_key') || '';
+(function () {
+  'use strict';
 
-  // --- 工具函数 ---
-  function headers(auth = true) {
-    const h = { 'Content-Type': 'application/json' };
-    if (auth && apiKey) {
-      h['Authorization'] = `Bearer ${apiKey}`;
-    }
-    return h;
+  const LS_BASE_URL = 'apillm_base_url';
+  const LS_API_KEY = 'apillm_api_key';
+  const LS_TOKEN = 'apillm_token';
+  const LS_USER = 'apillm_user';
+
+  function getBaseUrl() {
+    return localStorage.getItem(LS_BASE_URL) || window.location.origin;
   }
 
-  async function request(method, path, options = {}) {
-    const { auth = true, body, signal } = options;
-    const url = `${baseUrl}${path}`;
-    const fetchOptions = {
-      method,
-      headers: headers(auth),
-      signal,
+  function setBaseUrl(url) {
+    localStorage.setItem(LS_BASE_URL, url);
+  }
+
+  function getApiKey() {
+    return localStorage.getItem(LS_API_KEY) || '';
+  }
+
+  function setApiKey(key) {
+    localStorage.setItem(LS_API_KEY, key);
+  }
+
+  function hasApiKey() {
+    return !!getApiKey();
+  }
+
+  function getToken() {
+    return localStorage.getItem(LS_TOKEN) || '';
+  }
+
+  function setToken(token) {
+    localStorage.setItem(LS_TOKEN, token);
+  }
+
+  function getUser() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_USER) || 'null');
+    } catch { return null; }
+  }
+
+  function setUser(user) {
+    localStorage.setItem(LS_USER, JSON.stringify(user));
+  }
+
+  function clearAuth() {
+    localStorage.removeItem(LS_TOKEN);
+    localStorage.removeItem(LS_USER);
+  }
+
+  // ============================================================
+  // 通用 fetch 封装
+  // ============================================================
+  async function request(path, options = {}) {
+    const base = getBaseUrl();
+    const url = `${base}${path}`;
+    const token = getToken();
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
     };
-    if (body) {
-      fetchOptions.body = JSON.stringify(body);
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else if (getApiKey()) {
+      headers['Authorization'] = `Bearer ${getApiKey()}`;
     }
-    const resp = await fetch(url, fetchOptions);
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => 'Unknown error');
-      let detail = text;
-      try { detail = JSON.parse(text).detail || text; } catch (_) { /* raw text */ }
-      throw new Error(`[${resp.status}] ${detail}`);
+
+    const res = await fetch(url, {
+      ...options,
+      headers,
+      signal: options.signal,
+    });
+
+    if (res.status === 401) {
+      clearAuth();
     }
-    return resp;
+
+    if (!res.ok) {
+      let msg = res.statusText;
+      try {
+        const body = await res.json();
+        msg = body.detail || body.message || msg;
+      } catch {}
+      throw new Error(msg);
+    }
+
+    const ct = res.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      return res.json();
+    }
+    return res;
   }
 
-  // --- API 方法 ---
-  return {
-    /** 设置基础 URL */
-    setBaseUrl(url) {
-      baseUrl = url.replace(/\/+$/, '');
-      localStorage.setItem('apillm_base_url', baseUrl);
-    },
-    getBaseUrl() { return baseUrl; },
+  // ============================================================
+  // 公共 API
+  // ============================================================
+  async function health() {
+    return request('/health');
+  }
 
-    /** 设置 API Key */
-    setApiKey(key) {
-      apiKey = key.trim();
-      localStorage.setItem('apillm_api_key', apiKey);
-    },
-    getApiKey() { return apiKey; },
-    hasApiKey() { return apiKey.length > 0; },
+  async function listModels() {
+    const apiKey = getApiKey();
+    if (!apiKey && !getToken()) {
+      throw new Error('请先登录或设置 API Key');
+    }
+    return request('/v1/models');
+  }
 
-    /** GET /health — 无需认证 */
-    async health() {
-      const resp = await request('GET', '/health', { auth: false });
-      return resp.json();
-    },
-
-    /** GET /v1/models — 需要认证 */
-    async listModels(signal) {
-      const resp = await request('GET', '/v1/models', { signal });
-      return resp.json();
-    },
-
-    /** POST /v1/chat/completions — 非流式 */
-    async chatCompletion(body, signal) {
-      const resp = await request('POST', '/v1/chat/completions', { body, signal });
-      return resp.json();
-    },
-
-    /** POST /v1/chat/completions — 流式 (SSE) */
-    async chatCompletionStream(body, onChunk, onDone, onError, signal) {
-      const url = `${baseUrl}/v1/chat/completions`;
-      const fetchOptions = {
-        method: 'POST',
-        headers: headers(true),
-        body: JSON.stringify({ ...body, stream: true }),
-        signal,
-      };
-      try {
-        const resp = await fetch(url, fetchOptions);
-        if (!resp.ok) {
-          const text = await resp.text().catch(() => 'Unknown error');
-          let detail = text;
-          try { detail = JSON.parse(text).detail || text; } catch (_) { /* raw */ }
-          throw new Error(`[${resp.status}] ${detail}`);
-        }
-        const reader = resp.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // 保留不完整行
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed || !trimmed.startsWith('data: ')) continue;
-            const data = trimmed.slice(6);
-            if (data === '[DONE]') {
-              onDone && onDone();
-              return;
-            }
-            try {
-              const parsed = JSON.parse(data);
-              onChunk && onChunk(parsed);
-            } catch (_) {
-              // 非 JSON 消息（如错误文本），跳过
-            }
-          }
-        }
-        onDone && onDone();
-      } catch (e) {
-        if (e.name !== 'AbortError') {
-          onError && onError(e);
+  // Chat (SSE / non-stream)
+  async function* chatStream(model, messages) {
+    const base = getBaseUrl();
+    const token = getToken();
+    const apiKey = getApiKey();
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token || apiKey}`,
+    };
+    const res = await fetch(`${base}/v1/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ model, messages, stream: true }),
+    });
+    if (!res.ok) {
+      let msg = res.statusText;
+      try { const b = await res.json(); msg = b.detail || msg; } catch {}
+      throw new Error(msg);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop() || '';
+      for (const line of lines) {
+        const t = line.trim();
+        if (t.startsWith('data: ')) {
+          const d = t.slice(6);
+          if (d === '[DONE]') return;
+          try { yield JSON.parse(d); } catch {}
         }
       }
-    },
+    }
+  }
+
+  // ============================================================
+  // Auth API
+  // ============================================================
+  async function login(username, password) {
+    const data = await request('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    });
+    setToken(data.access_token);
+    localStorage.setItem('apillm_refresh', data.refresh_token);
+    return data;
+  }
+
+  async function refreshToken() {
+    const refresh = localStorage.getItem('apillm_refresh');
+    if (!refresh) throw new Error('No refresh token');
+    const data = await request('/api/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refresh_token: refresh }),
+    });
+    setToken(data.access_token);
+    localStorage.setItem('apillm_refresh', data.refresh_token);
+    return data;
+  }
+
+  async function logout() {
+    const refresh = localStorage.getItem('apillm_refresh');
+    if (refresh) {
+      try {
+        await request('/api/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refresh_token: refresh }),
+        });
+      } catch {}
+    }
+    clearAuth();
+    localStorage.removeItem('apillm_refresh');
+  }
+
+  async function fetchMe() {
+    const data = await request('/api/auth/me');
+    setUser(data);
+    return data;
+  }
+
+  // ============================================================
+  // Admin API
+  // ============================================================
+  async function adminListUpstreams() {
+    return request('/api/admin/upstreams');
+  }
+  async function adminCreateUpstream(data) {
+    return request('/api/admin/upstreams', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async function adminUpdateUpstream(id, data) {
+    return request(`/api/admin/upstreams/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async function adminDeleteUpstream(id) {
+    return request(`/api/admin/upstreams/${id}`, { method: 'DELETE' });
+  }
+
+  async function adminListModels() {
+    return request('/api/admin/models');
+  }
+  async function adminCreateModel(data) {
+    return request('/api/admin/models', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async function adminUpdateModel(id, data) {
+    return request(`/api/admin/models/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async function adminDeleteModel(id) {
+    return request(`/api/admin/models/${id}`, { method: 'DELETE' });
+  }
+
+  async function adminListUsers() {
+    return request('/api/admin/users');
+  }
+  async function adminCreateUser(data) {
+    return request('/api/admin/users', { method: 'POST', body: JSON.stringify(data) });
+  }
+  async function adminUpdateUser(id, data) {
+    return request(`/api/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+  async function adminDeleteUser(id) {
+    return request(`/api/admin/users/${id}`, { method: 'DELETE' });
+  }
+
+  async function adminPriceFetch() {
+    return request('/api/admin/prices/fetch', { method: 'POST' });
+  }
+  async function adminHealthCheck() {
+    return request('/api/admin/health/check', { method: 'POST' });
+  }
+
+  // ============================================================
+  // 导出
+  // ============================================================
+  window.APILLM = {
+    // Config
+    getBaseUrl, setBaseUrl,
+    getApiKey, setApiKey, hasApiKey,
+    // Auth
+    getToken, setToken, getUser, setUser, clearAuth,
+    login, refreshToken, logout, fetchMe,
+    // API
+    request,
+    health,
+    listModels,
+    chatStream,
+    // Admin
+    adminListUpstreams, adminCreateUpstream, adminUpdateUpstream, adminDeleteUpstream,
+    adminListModels, adminCreateModel, adminUpdateModel, adminDeleteModel,
+    adminListUsers, adminCreateUser, adminUpdateUser, adminDeleteUser,
+    adminPriceFetch, adminHealthCheck,
   };
 })();
