@@ -1,6 +1,8 @@
 import enum
 from datetime import datetime, UTC
+from typing import Any
 from sqlalchemy import String, Boolean, Integer, Numeric, ForeignKey, DateTime, Enum as SAEnum
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -47,4 +49,5 @@ class Upstream(Base):
     priority: Mapped[int] = mapped_column(Integer, default=0)
     markup_rate: Mapped[float] = mapped_column(Numeric(5, 4), default=0.2)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    pricing_config: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))

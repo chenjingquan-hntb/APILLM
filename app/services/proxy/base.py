@@ -13,6 +13,10 @@ def build_url(base_url: str, path: str) -> str:
     return f"{base_url.rstrip('/')}{path}"
 
 
+def auth_header(api_key: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {api_key}"}
+
+
 class BaseProxyHandler(ABC):
     def _url(self, upstream: Upstream, path: str) -> str:
         return build_url(upstream.base_url, path)

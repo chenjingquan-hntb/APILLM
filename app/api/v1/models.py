@@ -8,7 +8,7 @@ from app.db.base import get_session
 from app.db.models import User, Upstream
 from app.db.repositories.upstream_repo import UpstreamRepository
 from app.schemas.openai import ModelCard, ModelList
-from app.services.proxy.base import build_url
+from app.services.proxy.base import build_url, auth_header
 
 router = APIRouter(tags=["models"])
 _models_client = httpx.AsyncClient(timeout=10.0)
@@ -20,7 +20,7 @@ async def _fetch_upstream_models(upstream: Upstream) -> list[dict]:
     try:
         resp = await _models_client.get(
             build_url(upstream.base_url, "/v1/models"),
-            headers={"Authorization": f"Bearer {upstream.api_key}"},
+            headers=auth_header(upstream.api_key),
         )
         resp.raise_for_status()
         return resp.json().get("data", [])

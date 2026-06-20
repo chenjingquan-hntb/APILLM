@@ -10,5 +10,12 @@ class Settings(BaseSettings):
     debug: bool = False
     api_key_prefix: str = "sk-relay-"
 
+    price_cache_ttl: int = 300
+    price_fetch_interval: int = 300
+    health_check_interval: int = 30
+    failure_threshold: int = 3
+    recovery_threshold: int = 2
+    max_retries: int = 3
+
 
 settings = Settings()
