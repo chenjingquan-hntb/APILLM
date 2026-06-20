@@ -10,7 +10,11 @@ from app.db.repositories.upstream_repo import UpstreamRepository
 from app.services.proxy.base import build_url, auth_header
 from app.services.redis import get_redis, PRICE_KEY_FMT
 
-_price_client = httpx.AsyncClient(timeout=10.0)
+_price_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=5.0, read=8.0, write=10.0, pool=5.0),
+    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+    follow_redirects=False,
+)
 
 
 def _nested_get(d: dict, path: str) -> float | str | None:
@@ -68,7 +72,13 @@ async def fetch_all(session: AsyncSession) -> dict[int, list[dict]]:
     if not upstreams:
         return {}
 
-    tasks = [asyncio.wait_for(_fetch_one(u), timeout=8.0) for u in upstreams]
+    sem = asyncio.Semaphore(10)
+
+    async def _bounded_fetch_one(u):
+        async with sem:
+            return await _fetch_one(u)
+
+    tasks = [_bounded_fetch_one(u) for u in upstreams]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     pricing: dict[int, list[dict]] = {}
@@ -83,7 +93,7 @@ async def fetch_all(session: AsyncSession) -> dict[int, list[dict]]:
 async def store_pricing(pricing: dict[int, list[dict]]) -> None:
     now = int(time.time())
     ttl = settings.price_cache_ttl
-    client = get_redis()
+    client = await get_redis()
     pipe = client.pipeline()
 
     for upstream_id, models in pricing.items():
@@ -115,7 +125,7 @@ async def run_price_fetch_loop(session_factory) -> None:
         except asyncio.CancelledError:
             logger.info("price_loop_cancelled")
             return
-        except Exception:
+        except (httpx.HTTPError, asyncio.TimeoutError):
             logger.error("price_loop_error", exc_info=True)
             await asyncio.sleep(settings.price_fetch_interval)
 

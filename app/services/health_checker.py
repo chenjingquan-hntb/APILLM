@@ -10,7 +10,11 @@ from app.db.repositories.upstream_repo import UpstreamRepository
 from app.services.proxy.base import build_url, auth_header
 from app.services.redis import cache_get, cache_set, HEALTH_KEY
 
-_health_client = httpx.AsyncClient(timeout=5.0)
+_health_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=5.0, read=5.0, write=10.0, pool=5.0),
+    limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+    follow_redirects=False,
+)
 
 
 class HealthStatus(str, enum.Enum):
@@ -60,7 +64,7 @@ async def _update_health(upstream: Upstream, ok: bool) -> bool:
         state["status"] = HealthStatus.healthy
 
     new_status = state["status"]
-    await cache_set(key, state)
+    await cache_set(key, state, ttl=settings.health_check_interval * 3)
 
     if prev_status != new_status:
         logger.warning(
@@ -83,7 +87,13 @@ async def check_all(session: AsyncSession) -> None:
     if not all_upstreams:
         return
 
-    tasks = [asyncio.wait_for(_ping_upstream(u), timeout=5.0) for u in all_upstreams]
+    sem = asyncio.Semaphore(10)
+
+    async def _bounded_ping(u):
+        async with sem:
+            return await asyncio.wait_for(_ping_upstream(u), timeout=5.0)
+
+    tasks = [_bounded_ping(u) for u in all_upstreams]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     db_changed = False
@@ -96,7 +106,7 @@ async def check_all(session: AsyncSession) -> None:
                 label = "enabled" if upstream.is_enabled else "disabled"
                 logger.warning("upstream_%s", label, upstream=upstream.name)
                 db_changed = True
-        except Exception:
+        except (httpx.HTTPError, asyncio.TimeoutError):
             logger.error("health_update_error", upstream=upstream.name, exc_info=True)
 
     if db_changed:
@@ -107,9 +117,9 @@ async def run_health_loop(session_factory) -> None:
     logger.info("health_loop_started", interval=settings.health_check_interval)
     while True:
         try:
-            await asyncio.sleep(settings.health_check_interval)
             async with session_factory() as session:
                 await check_all(session)
+            await asyncio.sleep(settings.health_check_interval)
         except asyncio.CancelledError:
             logger.info("health_loop_cancelled")
             return

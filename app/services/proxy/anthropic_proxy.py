@@ -3,7 +3,9 @@ import time
 import uuid
 from typing import AsyncIterator
 import httpx
+from pydantic import ValidationError
 from app.db.models import Upstream
+from app.core.logging import logger
 from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionChunk, StreamChoice, DeltaMessage
 from app.schemas.anthropic import AnthropicResponse, openai_to_anthropic, anthropic_to_openai, STOP_REASON_MAP
 from app.services.proxy.base import BaseProxyHandler, http_client
@@ -26,7 +28,7 @@ class AnthropicProxyHandler(BaseProxyHandler):
             )
             resp.raise_for_status()
             return anthropic_to_openai(AnthropicResponse.model_validate(resp.json()), request.model)
-        except (httpx.HTTPStatusError, httpx.RequestError) as e:
+        except (httpx.HTTPStatusError, httpx.RequestError, json.JSONDecodeError, ValidationError) as e:
             self._raise_for_http_error(e, upstream)
 
     async def forward_stream(
@@ -56,12 +58,29 @@ class AnthropicProxyHandler(BaseProxyHandler):
                         )
                     elif etype == "message_delta":
                         stop_reason = event.get("delta", {}).get("stop_reason")
+                        mapped = STOP_REASON_MAP.get(stop_reason or "end_turn")
+                        if mapped is None:
+                            logger.debug("unknown_stop_reason", reason=stop_reason)
+                            mapped = "stop"
                         yield ChatCompletionChunk(
                             id=chunk_id, created=created, model=request.model,
                             choices=[StreamChoice(
                                 index=0, delta=DeltaMessage(),
-                                finish_reason=STOP_REASON_MAP.get(stop_reason or "end_turn", "stop"),
+                                finish_reason=mapped,
                             )],
                         )
-        except (httpx.HTTPStatusError, httpx.RequestError) as e:
+        except (httpx.HTTPStatusError, httpx.RequestError, json.JSONDecodeError) as e:
+            if isinstance(e, json.JSONDecodeError):
+                yield ChatCompletionChunk(
+                    id="error",
+                    object="chat.completion.chunk",
+                    created=0,
+                    model=request.model,
+                    choices=[StreamChoice(
+                        index=0,
+                        delta=DeltaMessage(content=json.dumps({"code": "proxy_error", "message": str(e)})),
+                        finish_reason="error",
+                    )],
+                )
+                return
             self._raise_for_http_error(e, upstream)

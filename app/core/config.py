@@ -17,5 +17,12 @@ class Settings(BaseSettings):
     recovery_threshold: int = 2
     max_retries: int = 3
 
+    pool_size: int = 20
+    max_overflow: int = 20
+    redis_max_connections: int = 50
+    http_max_connections: int = 200
+    http_max_keepalive: int = 50
+    concurrency_limit: int = 10
+
 
 settings = Settings()

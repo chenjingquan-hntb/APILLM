@@ -1,7 +1,8 @@
 import time
 import uuid
 from typing import Literal
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ConfigDict
 
 from app.schemas.openai import (
     ChatCompletionRequest,
@@ -22,11 +23,15 @@ STOP_REASON_MAP = {
 
 
 class AnthropicMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     role: Literal["user", "assistant"]
     content: str
 
 
 class AnthropicRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     model: str
     system: str | None = None
     messages: list[AnthropicMessage]
@@ -38,16 +43,22 @@ class AnthropicRequest(BaseModel):
 
 
 class AnthropicContentBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     type: str
     text: str | None = None
 
 
 class AnthropicUsage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     input_tokens: int = 0
     output_tokens: int = 0
 
 
 class AnthropicResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     id: str
     type: str = "message"
     role: str = "assistant"

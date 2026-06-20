@@ -11,7 +11,11 @@ from app.schemas.openai import ModelCard, ModelList
 from app.services.proxy.base import build_url, auth_header
 
 router = APIRouter(tags=["models"])
-_models_client = httpx.AsyncClient(timeout=10.0)
+_models_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=5.0, read=10.0, write=10.0, pool=5.0),
+    limits=httpx.Limits(max_connections=50, max_keepalive_connections=20),
+    follow_redirects=False,
+)
 
 _FETCH_TIMEOUT = 5.0
 
@@ -24,7 +28,7 @@ async def _fetch_upstream_models(upstream: Upstream) -> list[dict]:
         )
         resp.raise_for_status()
         return resp.json().get("data", [])
-    except Exception:
+    except (httpx.HTTPError, asyncio.TimeoutError):
         return []
 
 
@@ -34,7 +38,13 @@ async def list_models(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ModelList:
     upstreams = await UpstreamRepository(session).get_enabled()
-    tasks = [asyncio.wait_for(_fetch_upstream_models(u), _FETCH_TIMEOUT) for u in upstreams]
+    sem = asyncio.Semaphore(10)
+
+    async def _bounded_fetch(u):
+        async with sem:
+            return await asyncio.wait_for(_fetch_upstream_models(u), _FETCH_TIMEOUT)
+
+    tasks = [_bounded_fetch(u) for u in upstreams]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     seen: set[str] = set()
     models: list[ModelCard] = []

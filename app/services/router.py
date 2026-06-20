@@ -45,7 +45,11 @@ async def rank_upstreams_by_model(upstreams: list[Upstream], model: str) -> list
         raise NoAvailableUpstreamError()
 
     keys = [PRICE_KEY_FMT.format(u.id, model) for u in upstreams]
-    prices = await cache_mget(keys)
+    try:
+        prices = await cache_mget(keys)
+    except Exception:
+        logger.warning("redis_unavailable_in_router", model=model)
+        prices = [None] * len(keys)
 
     priced: list[tuple[Upstream, float]] = []
     unpriced: list[Upstream] = []

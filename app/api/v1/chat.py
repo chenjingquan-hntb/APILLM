@@ -5,12 +5,13 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.core.config import settings
-from app.core.exceptions import ProxyError, UpstreamError
+from app.core.exceptions import AppError, NoAvailableUpstreamError, ProxyError, UpstreamError
 from app.core.logging import logger
 from app.db.base import get_session
 from app.db.models import User, Upstream
 from app.db.repositories.upstream_repo import UpstreamRepository
 from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse
+from app.services.redis import cache_mget, HEALTH_KEY
 from app.services.router import rank_upstreams_by_model, get_handler
 
 router = APIRouter(tags=["chat"])
@@ -22,20 +23,41 @@ async def chat_completions(
     user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    upstreams = await UpstreamRepository(session).get_enabled()
-    ranked = await rank_upstreams_by_model(upstreams, request.model)
-    candidates = ranked[:settings.max_retries]
+    try:
+        upstreams = await UpstreamRepository(session).get_enabled()
+        ranked = await rank_upstreams_by_model(upstreams, request.model)
 
-    if request.stream:
-        return await _stream_with_failover(request, candidates)
+        # Filter out unhealthy upstreams
+        health_keys = [HEALTH_KEY.format(u.id) for u in ranked]
+        health_states = await cache_mget(health_keys)
+        healthy_ranked = []
+        unhealthy_ranked = []
+        for u, state in zip(ranked, health_states):
+            if state and state.get("status") in ("healthy", "degraded"):
+                healthy_ranked.append(u)
+            else:
+                unhealthy_ranked.append(u)
+        ranked = healthy_ranked + unhealthy_ranked
 
-    return await _non_stream_with_failover(request, candidates)
+        candidates = ranked[:settings.max_retries]
+
+        if request.stream:
+            return await _stream_with_failover(request, candidates)
+
+        return await _non_stream_with_failover(request, candidates)
+    except AppError:
+        raise
+    except Exception as e:
+        logger.error("chat_unhandled_error", exc_info=True)
+        raise UpstreamError(str(e))
 
 
 async def _non_stream_with_failover(
     request: ChatCompletionRequest,
     upstreams: list[Upstream],
 ) -> ChatCompletionResponse:
+    if not upstreams:
+        raise NoAvailableUpstreamError()
     errors: list[str] = []
     for upstream in upstreams:
         handler = get_handler(upstream)
@@ -51,6 +73,8 @@ async def _stream_with_failover(
     request: ChatCompletionRequest,
     upstreams: list[Upstream],
 ) -> StreamingResponse:
+    if not upstreams:
+        raise NoAvailableUpstreamError()
     last = upstreams[-1] if upstreams else None
 
     async def _stream():
@@ -65,6 +89,11 @@ async def _stream_with_failover(
                 logger.warning("failover_try_next_stream", upstream=upstream.name, model=request.model)
                 if upstream is last:
                     yield f"data: {json.dumps({'code': 'upstream_error', 'message': e.detail})}\n\n"
+            except Exception as e:
+                logger.error("stream_generator_error", exc_info=True)
+                yield f"data: {json.dumps({'code': 'stream_error', 'message': str(e)})}\n\n"
+                if upstream is last:
+                    return
         yield f"data: {json.dumps({'code': 'no_upstream', 'message': 'All upstreams exhausted'})}\n\n"
 
     return StreamingResponse(_stream(), media_type="text/event-stream")

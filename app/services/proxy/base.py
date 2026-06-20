@@ -6,7 +6,11 @@ from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse, Ch
 from app.core.exceptions import ProxyError
 from app.core.logging import logger
 
-http_client = httpx.AsyncClient(timeout=120.0)
+http_client = httpx.AsyncClient(
+    timeout=httpx.Timeout(connect=10.0, read=120.0, write=30.0, pool=10.0),
+    limits=httpx.Limits(max_connections=200, max_keepalive_connections=50),
+    follow_redirects=False,
+)
 
 
 def build_url(base_url: str, path: str) -> str:
@@ -29,7 +33,7 @@ class BaseProxyHandler(ABC):
         else:
             msg += str(e)
             logger.error("upstream_request_error", upstream=upstream.name, error=str(e))
-        raise ProxyError(msg)
+        raise ProxyError(msg) from e
 
     @abstractmethod
     async def forward(self, request: ChatCompletionRequest, upstream: Upstream) -> ChatCompletionResponse: ...
