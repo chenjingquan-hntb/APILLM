@@ -274,6 +274,9 @@
   async function adminStatsByModel() {
     return request('/api/admin/stats/by-model');
   }
+  async function adminStatsByUpstream() {
+    return request('/api/admin/stats/by-upstream');
+  }
 
   // ============================================================
   // 导出
@@ -298,6 +301,6 @@
     adminListModels, adminCreateModel, adminUpdateModel, adminDeleteModel,
     adminListUsers, adminCreateUser, adminUpdateUser, adminDeleteUser,
     adminPriceFetch, adminHealthCheck,
-    adminListLogs, adminStatsOverview, adminStatsByModel,
+    adminListLogs, adminStatsOverview, adminStatsByModel, adminStatsByUpstream,
   };
 })();

@@ -426,8 +426,16 @@
             <td>¥${r.cost.toFixed(4)}</td>
           </tr>`).join('');
       } else {
+        const data = await APILLM.adminStatsByUpstream();
         table.querySelector('thead tr').innerHTML = '<th>上游</th><th>调用次数</th><th>Token输入</th><th>Token输出</th><th>费用</th>';
-        table.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="message">上游统计暂未实现</td></tr>';
+        table.querySelector('tbody').innerHTML = data.map(r => `
+          <tr>
+            <td>#${r.upstream_id || '—'}</td>
+            <td>${r.calls}</td>
+            <td>${r.tokens_in}</td>
+            <td>${r.tokens_out}</td>
+            <td>¥${r.cost.toFixed(4)}</td>
+          </tr>`).join('');
       }
       // Load overview
       try {
