@@ -338,16 +338,43 @@
       <div class="form-group"><label>名称</label><input id="uf-name" class="input"></div>
       <div class="form-group"><label>地址</label><input id="uf-url" class="input" placeholder="https://api.openai.com"></div>
       <div class="form-group"><label>API Key</label><input id="uf-key" class="input" type="password"></div>
-      <div class="form-group"><label>协议</label><select id="uf-proto" class="input"><option value="openai">openai</option><option value="anthropic">anthropic</option></select></div>
+      <div class="form-group">
+        <label>协议</label>
+        <select id="uf-proto" class="input" onchange="window._ufProtoChange()">
+          <option value="openai">openai (OpenAI / OneAPI / NewAPI)</option>
+          <option value="anthropic">anthropic</option>
+        </select>
+      </div>
       <div class="form-group"><label>加价率</label><input id="uf-markup" class="input" type="number" step="0.01" value="0.2"></div>
       <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem"><input id="uf-enabled" type="checkbox" checked style="width:auto"> 启用</label></div>
+      <div class="form-group">
+        <label>价格提取配置 (JSON)</label>
+        <textarea id="uf-pricing" class="input" rows="5" placeholder='{"model_id_field":"id","prompt_price_field":"pricing.prompt","completion_price_field":"pricing.completion"}' style="font-family:monospace;font-size:0.75rem"></textarea>
+        <div style="font-size:0.6875rem;color:var(--text-muted);margin-top:0.25rem">
+          留空则不自动抓取价格。常用模板：<br>
+          <a href="#" onclick="window._ufSetTemplate('openai')" style="color:var(--accent-blue)">OneAPI/NewAPI</a> · 
+          <a href="#" onclick="window._ufSetTemplate('anthropic')" style="color:var(--accent-blue)">Anthropic</a> · 
+          <a href="#" onclick="window._ufSetTemplate('none')" style="color:var(--accent-blue)">仅模型名(无价格)</a>
+        </div>
+      </div>
       <button class="btn primary" id="uf-submit" style="width:100%">保存</button>
     `;
+
+    // Set initial template based on protocol
+    const protoVal = $('#uf-proto').value;
+    window._ufSetTemplate(protoVal);
+
     openModal(title, body, async () => {
+      let pricingConfig = null;
+      const raw = $('#uf-pricing').value.trim();
+      if (raw) {
+        try { pricingConfig = JSON.parse(raw); } catch(e) { alert('价格配置 JSON 格式错误'); return; }
+      }
       const data = {
         name: $('#uf-name').value, base_url: $('#uf-url').value, api_key: $('#uf-key').value,
         protocol: $('#uf-proto').value, markup_rate: parseFloat($('#uf-markup').value) || 0.2,
         is_enabled: $('#uf-enabled').checked,
+        pricing_config: pricingConfig,
       };
       if (id) await APILLM.adminUpdateUpstream(id, data);
       else await APILLM.adminCreateUpstream(data);
@@ -592,6 +619,21 @@
   function closeModal() {
     $('#modal-overlay').style.display = 'none';
   }
+
+  // --- 定价模板 ---
+  window._ufProtoChange = () => {
+    window._ufSetTemplate($('#uf-proto').value);
+  };
+
+  window._ufSetTemplate = (type) => {
+    const el = $('#uf-pricing');
+    const templates = {
+      openai: JSON.stringify({model_id_field:"id", prompt_price_field:"pricing.prompt", completion_price_field:"pricing.completion"}, null, 2),
+      anthropic: JSON.stringify({model_id_field:"id", prompt_price_field:"pricing.prompt", completion_price_field:"pricing.completion"}, null, 2),
+      none: '',
+    };
+    el.value = templates[type] || '';
+  };
 
   function esc(s) {
     if (!s) return '';
