@@ -1,23 +1,25 @@
 """Phase 2 smoke test: price monitoring, smart routing, health check, failover"""
 import asyncio
+import hashlib
+import hmac
 import json
-import sys
 import os
 import secrets
-import hashlib
+import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import httpx
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E402
 
-from app.db.base import async_session_factory
-from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
-from app.services.redis import init_redis, close_redis, cache_set, cache_get, cache_delete, PRICE_KEY_FMT, HEALTH_KEY
-from app.services.router import rank_upstreams_by_model, select_upstream, select_upstream_by_model
-from app.services.health_checker import _update_health
-from app.services.price_fetcher import _fetch_one, store_pricing
-from app.core.exceptions import NoAvailableUpstreamError
+from app.core.config import settings  # noqa: E402
+from app.db.base import async_session_factory  # noqa: E402
+from app.db.models import User, ApiKey, Upstream, UpstreamProtocol  # noqa: E402
+from app.services.redis import init_redis, close_redis, cache_set, cache_get, cache_delete, PRICE_KEY_FMT, HEALTH_KEY  # noqa: E402
+from app.services.router import rank_upstreams_by_model, select_upstream, select_upstream_by_model  # noqa: E402
+from app.services.health_checker import _update_health  # noqa: E402
+from app.services.price_fetcher import _fetch_one, store_pricing  # noqa: E402
+from app.core.exceptions import NoAvailableUpstreamError  # noqa: E402
 
 MOCK_PORT = 18081
 MOCK_HOST = "127.0.0.1"
@@ -58,7 +60,11 @@ class MockUpstreamHandler(BaseHTTPRequestHandler):
 
 async def setup_db() -> tuple[str, list[Upstream]]:
     raw_key = secrets.token_hex(24)
-    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    key_hash = hmac.new(
+        settings.secret_key.encode(),
+        raw_key.encode(),
+        hashlib.sha256
+    ).hexdigest()
 
     from sqlalchemy import text
 

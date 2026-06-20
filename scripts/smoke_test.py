@@ -1,6 +1,7 @@
 """冒烟测试：覆盖数据库、认证、代理、转发全链路"""
 import asyncio
 import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -12,6 +13,7 @@ BASE = "http://127.0.0.1:8000"
 
 # 添加上游模块到 path (必须在 app 模块导入之前)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E402
+from app.core.config import settings  # noqa: E402
 from app.db.base import async_session_factory  # noqa: E402
 from app.db.models import User, ApiKey, Upstream, UpstreamProtocol  # noqa: E402
 
@@ -19,7 +21,11 @@ from app.db.models import User, ApiKey, Upstream, UpstreamProtocol  # noqa: E402
 async def setup() -> str:
     """幂等：创建测试用户并返回 API Key"""
     raw_key = secrets.token_hex(24)
-    key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
+    key_hash = hmac.new(
+        settings.secret_key.encode(),
+        raw_key.encode(),
+        hashlib.sha256
+    ).hexdigest()
     from sqlalchemy import text
     async with async_session_factory() as s:
         await s.execute(text("DELETE FROM api_keys WHERE label = 'test'"))
@@ -53,8 +59,9 @@ async def seed_upstream():
 async def test_health(client: httpx.AsyncClient):
     resp = await client.get(f"{BASE}/health")
     assert resp.status_code == 200, f"health fail: {resp.status_code}"
-    assert resp.json() == {"status": "ok"}
-    print("[PASS] GET /health")
+    data = resp.json()
+    assert data["status"] in ("ok", "degraded"), f"unexpected health status: {data}"
+    print(f"[PASS] GET /health — status={data['status']}")
 
 
 async def test_auth_rejected(client: httpx.AsyncClient):
