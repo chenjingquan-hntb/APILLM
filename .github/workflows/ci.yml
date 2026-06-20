@@ -36,6 +36,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgresql+asyncpg://relay:relay_test@localhost:5432/relay_test
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "false"
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,16 +73,21 @@ jobs:
         run: |
           python -m compileall app/ scripts/
 
-      - name: Create .env for CI
-        run: |
-          echo "DATABASE_URL=postgresql+asyncpg://relay:relay_test@localhost:5432/relay_test" > .env
-          echo "REDIS_URL=redis://localhost:6379/0" >> .env
-          echo "SECRET_KEY=ci-test-secret-key-not-for-production" >> .env
-          echo "DEBUG=false" >> .env
-
       - name: Run alembic migrations
         run: |
           python -m alembic upgrade head
+
+      - name: Start app server for smoke tests
+        run: |
+          python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          # Wait for server to be ready (max 30s)
+          for i in $(seq 1 30); do
+            if curl -s http://127.0.0.1:8000/health > /dev/null 2>&1; then
+              echo "Server ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
 
       - name: Run smoke tests (Phase 1)
         run: |
@@ -96,3 +107,8 @@ jobs:
             echo "No unit tests found yet — skipping"
           fi
         timeout-minutes: 5
+
+      - name: Stop app server
+        if: always()
+        run: |
+          pkill -f "uvicorn app.main:app" || true
