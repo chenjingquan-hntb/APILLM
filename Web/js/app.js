@@ -228,13 +228,20 @@
       return;
     }
     errEl.style.display = 'none';
+    const btn = $('#btn-login');
+    btn.disabled = true;
+    btn.textContent = '登录中…';
     try {
       await APILLM.login(username, password);
       await APILLM.fetchMe();
       navigateTo('home');
     } catch (e) {
-      errEl.textContent = e.message || '登录失败';
+      errEl.textContent = (e.message || '登录失败') + ' [检查 F12→Console/Network]';
       errEl.style.display = '';
+      console.error('Login error:', e);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '登录';
     }
   }
 
