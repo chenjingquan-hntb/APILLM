@@ -271,10 +271,36 @@
     $('#btn-model-add').addEventListener('click', () => openModelForm());
     $('#btn-user-add').addEventListener('click', () => openUserForm());
     $('#btn-price-fetch').addEventListener('click', async () => {
-      try { await APILLM.adminPriceFetch(); alert('价格抓取已触发'); } catch(e) { alert('失败: ' + e.message); }
+      const btn = $('#btn-price-fetch');
+      btn.disabled = true;
+      btn.textContent = '抓取中…';
+      try {
+        const res = await APILLM.adminPriceFetch();
+        await new Promise(r => setTimeout(r, 1000));
+        alert(`价格抓取完成，已抓取 ${res.upstreams_fetched || '?'} 个上游`);
+      } catch(e) {
+        alert('价格抓取失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '抓取价格';
+      }
     });
     $('#btn-health-check').addEventListener('click', async () => {
-      try { await APILLM.adminHealthCheck(); alert('健康检查已触发'); } catch(e) { alert('失败: ' + e.message); }
+      const btn = $('#btn-health-check');
+      btn.disabled = true;
+      btn.textContent = '检查中…';
+      try {
+        await APILLM.adminHealthCheck();
+        // 等待 2 秒让后端健康检查完成
+        await new Promise(r => setTimeout(r, 2000));
+        await refreshHealth();
+        alert('健康检查完成，上游状态已更新');
+      } catch(e) {
+        alert('健康检查失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '健康检查';
+      }
     });
     $$('#admin-tab-stats .toolbar button').forEach(btn => {
       btn.addEventListener('click', () => loadAdminStats(btn.textContent.includes('模型') ? 'models' : 'upstreams'));
