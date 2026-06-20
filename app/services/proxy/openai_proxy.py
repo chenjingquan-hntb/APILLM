@@ -1,4 +1,3 @@
-import json
 from typing import AsyncIterator
 from app.db.models import Upstream
 from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse, ChatCompletionChunk
@@ -37,6 +36,6 @@ class OpenAIProxyHandler(BaseProxyHandler):
                     data = line[6:]
                     if data == "[DONE]":
                         return
-                    yield ChatCompletionChunk.model_validate(json.loads(data))
+                    yield ChatCompletionChunk.model_validate_json(data)
         except (httpx.HTTPStatusError, httpx.RequestError) as e:
             self._raise_for_http_error(e, upstream)

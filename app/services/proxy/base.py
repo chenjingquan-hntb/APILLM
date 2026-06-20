@@ -9,16 +9,23 @@ from app.core.logging import logger
 http_client = httpx.AsyncClient(timeout=120.0)
 
 
+def build_url(base_url: str, path: str) -> str:
+    return f"{base_url.rstrip('/')}{path}"
+
+
 class BaseProxyHandler(ABC):
     def _url(self, upstream: Upstream, path: str) -> str:
-        return f"{upstream.base_url.rstrip('/')}{path}"
+        return build_url(upstream.base_url, path)
 
     def _raise_for_http_error(self, e: Exception, upstream: Upstream) -> None:
+        msg = f"[{upstream.name}] "
         if isinstance(e, httpx.HTTPStatusError):
+            msg += f"HTTP {e.response.status_code}"
             logger.error("upstream_http_error", upstream=upstream.name, status=e.response.status_code)
-            raise ProxyError(f"upstream returned HTTP {e.response.status_code}")
-        logger.error("upstream_request_error", upstream=upstream.name, error=str(e))
-        raise ProxyError(str(e))
+        else:
+            msg += str(e)
+            logger.error("upstream_request_error", upstream=upstream.name, error=str(e))
+        raise ProxyError(msg)
 
     @abstractmethod
     async def forward(self, request: ChatCompletionRequest, upstream: Upstream) -> ChatCompletionResponse: ...

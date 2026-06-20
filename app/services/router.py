@@ -11,7 +11,10 @@ _HANDLERS: dict[UpstreamProtocol, BaseProxyHandler] = {
 
 
 def get_handler(upstream: Upstream) -> BaseProxyHandler:
-    return _HANDLERS[upstream.protocol]
+    handler = _HANDLERS.get(upstream.protocol)
+    if handler is None:
+        raise NoAvailableUpstreamError()
+    return handler
 
 
 def select_upstream(upstreams: list[Upstream]) -> Upstream:

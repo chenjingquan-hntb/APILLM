@@ -18,7 +18,8 @@ class NotFoundError(AppError):
 
 class UpstreamError(AppError):
     def __init__(self, detail: str, upstream_name: str = ""):
-        super().__init__(status.HTTP_502_BAD_GATEWAY, detail, "upstream_error")
+        msg = f"[{upstream_name}] {detail}" if upstream_name else detail
+        super().__init__(status.HTTP_502_BAD_GATEWAY, msg, "upstream_error")
 
 
 class NoAvailableUpstreamError(AppError):

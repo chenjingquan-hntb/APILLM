@@ -31,7 +31,7 @@ async def chat_completions(
                     yield f"data: {chunk.model_dump_json()}\n\n"
                 yield "data: [DONE]\n\n"
             except ProxyError as e:
-                yield f"data: {json.dumps({'error': e.detail})}\n\n"
+                yield f"data: {json.dumps({'code': 'upstream_error', 'message': e.detail})}\n\n"
 
         return StreamingResponse(_stream(), media_type="text/event-stream")
 
