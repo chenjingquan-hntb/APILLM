@@ -6,7 +6,7 @@ from datetime import datetime, UTC
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, require_admin
 from app.core.exceptions import AppError
@@ -490,3 +490,141 @@ async def trigger_health_check(
     except Exception as e:
         logger.error("admin_health_check_failed", error=str(e))
         raise AppError(500, f"健康检查失败: {e}")
+
+
+# ============================================================
+# Usage logs (admin)
+# ============================================================
+
+@router.get("/logs")
+async def admin_list_logs(
+    session: Annotated[AsyncSession, _session],
+    admin: Annotated[User, _admin],
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    user_id: int | None = Query(None),
+    model: str | None = Query(None),
+    status: str | None = Query(None),
+):
+    q = select(UsageLog)
+    if user_id:
+        q = q.where(UsageLog.user_id == user_id)
+    if model:
+        q = q.where(UsageLog.model == model)
+    if status:
+        q = q.where(UsageLog.status == status)
+    offset = (page - 1) * size
+    result = await session.execute(
+        q.order_by(desc(UsageLog.created_at)).offset(offset).limit(size)
+    )
+    logs = result.scalars().all()
+    total_result = await session.execute(select(func.count()).select_from(q.alias()))
+    total = total_result.scalar_one()
+    return {
+        "total": total,
+        "page": page,
+        "size": size,
+        "data": [
+            {
+                "id": log_entry.id,
+                "user_id": log_entry.user_id,
+                "model": log_entry.model,
+                "upstream_id": log_entry.upstream_id,
+                "tokens_in": log_entry.tokens_in,
+                "tokens_out": log_entry.tokens_out,
+                "cost": float(log_entry.cost),
+                "status": log_entry.status,
+                "error_message": log_entry.error_message,
+                "latency_ms": log_entry.latency_ms,
+                "created_at": log_entry.created_at.isoformat() if log_entry.created_at else None,
+            }
+            for log_entry in logs
+        ],
+    }
+
+
+# ============================================================
+# Stats dashboard (admin)
+# ============================================================
+
+@router.get("/stats/overview")
+async def admin_stats_overview(
+    session: Annotated[AsyncSession, _session],
+    admin: Annotated[User, _admin],
+):
+    from datetime import datetime, timedelta, UTC
+    since = datetime.now(UTC) - timedelta(hours=24)
+    result = await session.execute(
+        select(
+            func.count(UsageLog.id).label("calls"),
+            func.sum(UsageLog.tokens_in).label("tokens_in"),
+            func.sum(UsageLog.tokens_out).label("tokens_out"),
+            func.sum(UsageLog.cost).label("cost"),
+        ).where(UsageLog.created_at >= since, UsageLog.status == "success")
+    )
+    row = result.one()
+    active_users_result = await session.execute(
+        select(func.count(func.distinct(UsageLog.user_id))).where(
+            UsageLog.created_at >= since
+        )
+    )
+    active_users = active_users_result.scalar_one()
+    return {
+        "total_calls_24h": row.calls or 0,
+        "total_tokens_in_24h": row.tokens_in or 0,
+        "total_tokens_out_24h": row.tokens_out or 0,
+        "total_cost_24h": float(row.cost or 0),
+        "active_users_24h": active_users or 0,
+    }
+
+
+@router.get("/stats/by-model")
+async def admin_stats_by_model(
+    session: Annotated[AsyncSession, _session],
+    admin: Annotated[User, _admin],
+):
+    result = await session.execute(
+        select(
+            UsageLog.model,
+            func.count(UsageLog.id).label("calls"),
+            func.sum(UsageLog.tokens_in).label("tokens_in"),
+            func.sum(UsageLog.tokens_out).label("tokens_out"),
+            func.sum(UsageLog.cost).label("cost"),
+        ).where(UsageLog.status == "success").group_by(UsageLog.model).order_by(desc(func.count(UsageLog.id)))
+    )
+    return [
+        {
+            "model": r.model,
+            "calls": r.calls,
+            "tokens_in": r.tokens_in or 0,
+            "tokens_out": r.tokens_out or 0,
+            "cost": float(r.cost or 0),
+        }
+        for r in result.all()
+    ]
+
+
+@router.get("/stats/by-upstream")
+async def admin_stats_by_upstream(
+    session: Annotated[AsyncSession, _session],
+    admin: Annotated[User, _admin],
+):
+    result = await session.execute(
+        select(
+            UsageLog.upstream_id,
+            func.count(UsageLog.id).label("calls"),
+            func.sum(UsageLog.tokens_in).label("tokens_in"),
+            func.sum(UsageLog.tokens_out).label("tokens_out"),
+            func.sum(UsageLog.cost).label("cost"),
+        ).where(UsageLog.status == "success").group_by(UsageLog.upstream_id).order_by(desc(func.count(UsageLog.id)))
+    )
+    return [
+        {
+            "upstream_id": r.upstream_id,
+            "calls": r.calls,
+            "tokens_in": r.tokens_in or 0,
+            "tokens_out": r.tokens_out or 0,
+            "cost": float(r.cost or 0),
+        }
+        for r in result.all()
+    ]

@@ -246,6 +246,35 @@
     return request('/api/admin/health/check', { method: 'POST' });
   }
 
+  // User API
+  async function userListKeys() {
+    return request('/api/user/keys');
+  }
+  async function userCreateKey(label) {
+    return request('/api/user/keys', { method: 'POST', body: JSON.stringify({ label }) });
+  }
+  async function userDeleteKey(id) {
+    return request(`/api/user/keys/${id}`, { method: 'DELETE' });
+  }
+  async function userListLogs(page = 1, size = 20) {
+    return request(`/api/user/logs?page=${page}&size=${size}`);
+  }
+  async function userStats() {
+    return request('/api/user/stats');
+  }
+
+  // Admin logs & stats
+  async function adminListLogs(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/admin/logs${qs ? '?' + qs : ''}`);
+  }
+  async function adminStatsOverview() {
+    return request('/api/admin/stats/overview');
+  }
+  async function adminStatsByModel() {
+    return request('/api/admin/stats/by-model');
+  }
+
   // ============================================================
   // 导出
   // ============================================================
@@ -261,10 +290,14 @@
     health,
     listModels,
     chatStream,
+    // User
+    userListKeys, userCreateKey, userDeleteKey,
+    userListLogs, userStats,
     // Admin
     adminListUpstreams, adminCreateUpstream, adminUpdateUpstream, adminDeleteUpstream,
     adminListModels, adminCreateModel, adminUpdateModel, adminDeleteModel,
     adminListUsers, adminCreateUser, adminUpdateUser, adminDeleteUser,
     adminPriceFetch, adminHealthCheck,
+    adminListLogs, adminStatsOverview, adminStatsByModel,
   };
 })();

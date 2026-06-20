@@ -10,6 +10,7 @@ from app.db.base import async_session_factory
 from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.admin import router as admin_router
+from app.api.user import router as user_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.models import router as models_router, _models_client
 from app.services.proxy.base import http_client
@@ -60,6 +61,7 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
+app.include_router(user_router)
 app.include_router(chat_router, prefix="/v1")
 app.include_router(models_router, prefix="/v1")
 

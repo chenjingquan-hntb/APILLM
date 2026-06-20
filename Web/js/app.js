@@ -413,9 +413,34 @@
   // ---------- 数据看板 ----------
   async function loadAdminStats(by = 'models') {
     const table = $('#table-stats');
-    table.querySelector('thead tr').innerHTML = `<th>${by === 'models' ? '模型' : '上游'}</th><th>调用次数</th><th>Token输入</th><th>Token输出</th><th>费用</th>`;
-    table.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="message">统计 API 即将上线</td></tr>';
-    // TODO: connect to /api/admin/stats/models or /api/admin/stats/upstreams
+    try {
+      if (by === 'models') {
+        const data = await APILLM.adminStatsByModel();
+        table.querySelector('thead tr').innerHTML = '<th>模型</th><th>调用次数</th><th>Token输入</th><th>Token输出</th><th>费用</th>';
+        table.querySelector('tbody').innerHTML = data.map(r => `
+          <tr>
+            <td><code>${esc(r.model)}</code></td>
+            <td>${r.calls}</td>
+            <td>${r.tokens_in}</td>
+            <td>${r.tokens_out}</td>
+            <td>¥${r.cost.toFixed(4)}</td>
+          </tr>`).join('');
+      } else {
+        table.querySelector('thead tr').innerHTML = '<th>上游</th><th>调用次数</th><th>Token输入</th><th>Token输出</th><th>费用</th>';
+        table.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="message">上游统计暂未实现</td></tr>';
+      }
+      // Load overview
+      try {
+        const ov = await APILLM.adminStatsOverview();
+        $('#admin-stat-cards').innerHTML = `
+          <div class="stat-card"><span class="stat-num">${ov.total_calls_24h}</span><span class="stat-label">24h调用</span></div>
+          <div class="stat-card"><span class="stat-num">${ov.total_tokens_in_24h + ov.total_tokens_out_24h}</span><span class="stat-label">24h Token</span></div>
+          <div class="stat-card"><span class="stat-num">¥${ov.total_cost_24h.toFixed(4)}</span><span class="stat-label">24h费用</span></div>
+          <div class="stat-card"><span class="stat-num">${ov.active_users_24h}</span><span class="stat-label">活跃用户</span></div>`;
+      } catch {}
+    } catch (e) {
+      table.querySelector('tbody').innerHTML = `<tr><td colspan="5" class="message">加载失败: ${e.message}</td></tr>`;
+    }
   }
 
   // ============================================================
@@ -439,24 +464,67 @@
 
   async function loadUserKeys() {
     const tbody = $('#table-keys tbody');
-    tbody.innerHTML = '<tr><td colspan="5" class="message">API Key 管理即将上线</td></tr>';
-    // TODO: GET /api/user/keys
+    try {
+      const data = await APILLM.userListKeys();
+      tbody.innerHTML = data.map(k => `
+        <tr>
+          <td>${esc(k.label)}</td>
+          <td><code>${esc(k.key_preview)}</code></td>
+          <td>${(k.created_at || '').slice(0,16)}</td>
+          <td>${k.last_used_at ? k.last_used_at.slice(0,16) : '—'}</td>
+          <td class="actions">
+            <button class="btn-text danger" onclick="window._userDelKey(${k.id})">删除</button>
+          </td>
+        </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="5" class="message">加载失败: ${e.message}</td></tr>`;
+    }
   }
 
+  window._userDelKey = async (id) => {
+    if (!confirm('确定删除此 API Key？此操作不可撤销。')) return;
+    try { await APILLM.userDeleteKey(id); loadUserKeys(); } catch(e) { alert(e.message); }
+  };
+
   async function createApiKey() {
-    alert('API Key 创建功能即将上线');
-    // TODO: POST /api/user/keys
+    const label = prompt('输入 Key 标签 (可选):', 'default');
+    if (label === null) return;
+    try {
+      const data = await APILLM.userCreateKey(label || 'default');
+      alert('新 API Key:\n\n' + data.api_key + '\n\n请立即复制保存，关闭后无法再次查看。');
+      loadUserKeys();
+    } catch(e) { alert('创建失败: ' + e.message); }
   }
 
   async function loadUserLogs() {
     const tbody = $('#table-logs tbody');
-    tbody.innerHTML = '<tr><td colspan="6" class="message">调用日志即将上线</td></tr>';
-    // TODO: GET /api/user/logs
+    try {
+      const data = await APILLM.userListLogs(1, 20);
+      tbody.innerHTML = data.data.map(l => `
+        <tr>
+          <td>${(l.created_at || '').slice(0,16)}</td>
+          <td><code>${esc(l.model)}</code></td>
+          <td>${l.upstream_id || '—'}</td>
+          <td>${l.tokens_in}+${l.tokens_out}</td>
+          <td>¥${l.cost.toFixed(4)}</td>
+          <td><span class="dot ${l.status === 'success' ? 'ok' : 'error'}"></span>${l.status}</td>
+        </tr>`).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" class="message">加载失败: ${e.message}</td></tr>`;
+    }
   }
 
   async function loadUserStats() {
-    $('#user-stat-cards').innerHTML = '<div class="message">数据看板即将上线</div>';
-    // TODO: GET /api/user/stats
+    try {
+      const data = await APILLM.userStats();
+      $('#user-stat-cards').innerHTML = `
+        <div class="stat-card"><span class="stat-num">${data.total_calls}</span><span class="stat-label">总调用</span></div>
+        <div class="stat-card"><span class="stat-num">${data.total_tokens_in + data.total_tokens_out}</span><span class="stat-label">总Token</span></div>
+        <div class="stat-card"><span class="stat-num">¥${data.total_cost.toFixed(4)}</span><span class="stat-label">总费用</span></div>
+        <div class="stat-card"><span class="stat-num">${data.balance.toFixed(4)}</span><span class="stat-label">余额</span></div>`;
+    } catch (e) {
+      $('#user-stat-cards').innerHTML = `<div class="message">加载失败: ${e.message}</div>`;
+    }
   }
 
   // ============================================================
