@@ -24,3 +24,9 @@ class UpstreamError(AppError):
 class NoAvailableUpstreamError(AppError):
     def __init__(self):
         super().__init__(status.HTTP_503_SERVICE_UNAVAILABLE, "No available upstream", "no_upstream")
+
+
+class ProxyError(Exception):
+    """内部代理异常，不继承 HTTPException，避免流式响应中被 Starlette 中间件截断连接"""
+    def __init__(self, detail: str):
+        self.detail = detail

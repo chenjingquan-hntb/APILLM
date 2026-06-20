@@ -1,8 +1,10 @@
+import json
 from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
+from app.core.exceptions import ProxyError, UpstreamError
 from app.db.base import get_session
 from app.db.models import User
 from app.db.repositories.upstream_repo import UpstreamRepository
@@ -24,10 +26,16 @@ async def chat_completions(
 
     if request.stream:
         async def _stream():
-            async for chunk in handler.forward_stream(request, upstream):
-                yield f"data: {chunk.model_dump_json()}\n\n"
-            yield "data: [DONE]\n\n"
+            try:
+                async for chunk in handler.forward_stream(request, upstream):
+                    yield f"data: {chunk.model_dump_json()}\n\n"
+                yield "data: [DONE]\n\n"
+            except ProxyError as e:
+                yield f"data: {json.dumps({'error': e.detail})}\n\n"
 
         return StreamingResponse(_stream(), media_type="text/event-stream")
 
-    return await handler.forward(request, upstream)
+    try:
+        return await handler.forward(request, upstream)
+    except ProxyError as e:
+        raise UpstreamError(e.detail, upstream.name)
