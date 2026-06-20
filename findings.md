@@ -1,5 +1,53 @@
 # Findings
 
+## 2026-06-20：前端展示站架构
+
+### ADR-6: 纯静态前端 + FastAPI StaticFiles
+前端采用纯 HTML/CSS/JS（零框架依赖），由 FastAPI 通过 `StaticFiles` 挂载在 `/` 路径托管。选择纯静态而非 React/Next.js 的原因：
+- 前端定位是"功能展示 + API 调试"，非生产级 SaaS 产品
+- 纯静态无构建步骤，开发-部署零延迟
+- 与后端共享同一域名/端口，无需处理 CORS（但 CORS 中间件已添加作为兜底）
+
+### ADR-7: 前端模块分层
+```
+Web/
+├── index.html       # 纯 HTML 结构
+├── css/style.css    # 暗色极简样式 + Hero 文字矩阵动画
+├── js/api.js        # API 客户端层：fetch 封装、Bearer 认证、SSE 流式解析
+└── js/app.js        # 应用逻辑层：健康轮询、模型加载、Chat Playground
+```
+- `api.js` 暴露全局 `APILLM` 对象（IIFE 模块模式），与 `app.js` 解耦
+- 配置通过 `localStorage` 持久化（baseUrl、apiKey）
+- SSE 流式解析使用 `ReadableStream.getReader()` + 行缓冲
+
+### 前端依赖
+- **Google Fonts**: Outfit (Display/Heading), Inter (Body), JetBrains Mono (Code)
+- **图标**: 内联 SVG（Lucide 风格），无图标库依赖
+- **无 JS 框架、无 CSS 框架、无构建工具**
+
+### MiMo 风格文字矩阵动画
+- 4 层 `<div>` 绝对定位，每层独立 `@keyframes scrollLeft` 动画
+- 层参数：字号 0.75rem→2.25rem，透明度 0.05→0.18，速度 160s→60s
+- 使用 `will-change: transform` 启用 GPU 合成
+- 使用 `mask-image: linear-gradient(to bottom, black 50%, transparent 100%)` 底部渐隐
+- 通过 `@media (prefers-reduced-motion)` 禁用动画
+
+### ADR-8: StaticFiles 挂载顺序
+```python
+# 路由先于 mount 注册，API 优先级高于静态文件
+app.include_router(health_router)
+app.include_router(chat_router, prefix="/v1")
+app.include_router(models_router, prefix="/v1")
+app.mount("/", StaticFiles(directory=web_dir, html=True), name="web")
+```
+FastAPI 按注册顺序匹配路由，API 路由先于静态文件挂载，确保 `/health`、`/v1/*` 不被静态文件覆盖。
+
+### 验证方法
+- Playwright headless Chromium 自动化截图 + DOM 检查
+- 关键检查项：Hero 标题、4 层矩阵动画、健康状态卡、模型网格、Playground 输入框、0 JS 错误
+
+---
+
 ## 2026-06-20：上游价格 API 兼容性调研
 
 ### 支流中转站价格接口摸底

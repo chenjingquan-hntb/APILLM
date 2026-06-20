@@ -1,0 +1,23 @@
+﻿2026-06-20T01:03:34.7536889Z ##[group]Run pip install ruff
+2026-06-20T01:03:34.7537236Z [36;1mpip install ruff[0m
+2026-06-20T01:03:34.7537540Z [36;1mruff check app/ scripts/ --ignore=E501,F401[0m
+2026-06-20T01:03:34.7573611Z shell: /usr/bin/bash -e {0}
+2026-06-20T01:03:34.7573874Z env:
+2026-06-20T01:03:34.7574419Z   DATABASE_URL: ***localhost:5432/relay_test
+2026-06-20T01:03:34.7574752Z   REDIS_URL: redis://localhost:6379/0
+2026-06-20T01:03:34.7575079Z   SECRET_KEY: ci-test-secret-key-not-for-production
+2026-06-20T01:03:34.7575411Z   DEBUG: false
+2026-06-20T01:03:34.7575678Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:34.7576095Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T01:03:34.7576530Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:34.7576903Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:34.7577286Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:34.7577653Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T01:03:34.7578009Z ##[endgroup]
+2026-06-20T01:03:35.6327216Z Collecting ruff
+2026-06-20T01:03:35.7348693Z   Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+2026-06-20T01:03:35.7691377Z Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.6 MB)
+2026-06-20T01:03:35.9959950Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 62.3 MB/s  0:00:00
+2026-06-20T01:03:36.0428890Z Installing collected packages: ruff
+2026-06-20T01:03:36.1818033Z Successfully installed ruff-0.15.18
+2026-06-20T01:03:36.2510944Z All checks passed!

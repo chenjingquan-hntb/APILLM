@@ -1,0 +1,33 @@
+﻿2026-06-20T01:02:51.7250950Z Current runner version: '2.335.1'
+2026-06-20T01:02:51.7281151Z ##[group]Runner Image Provisioner
+2026-06-20T01:02:51.7282335Z Hosted Compute Agent
+2026-06-20T01:02:51.7282960Z Version: 20260611.554
+2026-06-20T01:02:51.7283644Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+2026-06-20T01:02:51.7284462Z Build Date: 2026-06-11T21:40:46Z
+2026-06-20T01:02:51.7285166Z Worker ID: {9c0a794d-cc21-43db-9af1-bd7060e24f81}
+2026-06-20T01:02:51.7285951Z Azure Region: westcentralus
+2026-06-20T01:02:51.7286596Z ##[endgroup]
+2026-06-20T01:02:51.7288032Z ##[group]Operating System
+2026-06-20T01:02:51.7288749Z Ubuntu
+2026-06-20T01:02:51.7289300Z 24.04.4
+2026-06-20T01:02:51.7289819Z LTS
+2026-06-20T01:02:51.7290425Z ##[endgroup]
+2026-06-20T01:02:51.7291083Z ##[group]Runner Image
+2026-06-20T01:02:51.7292046Z Image: ubuntu-24.04
+2026-06-20T01:02:51.7292643Z Version: 20260615.205.1
+2026-06-20T01:02:51.7293708Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-20T01:02:51.7295723Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+2026-06-20T01:02:51.7296808Z ##[endgroup]
+2026-06-20T01:02:51.7298024Z ##[group]GITHUB_TOKEN Permissions
+2026-06-20T01:02:51.7300166Z Contents: read
+2026-06-20T01:02:51.7300834Z Metadata: read
+2026-06-20T01:02:51.7301393Z Packages: read
+2026-06-20T01:02:51.7302427Z ##[endgroup]
+2026-06-20T01:02:51.7304680Z Secret source: Actions
+2026-06-20T01:02:51.7305602Z Prepare workflow directory
+2026-06-20T01:02:51.9206340Z Prepare all required actions
+2026-06-20T01:02:51.9297942Z Getting action download info
+2026-06-20T01:02:52.3064947Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-06-20T01:02:52.4021332Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-06-20T01:02:52.4877490Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-06-20T01:02:52.8027037Z Complete job name: lint-and-test

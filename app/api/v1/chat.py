@@ -8,11 +8,12 @@ from app.core.config import settings
 from app.core.exceptions import AppError, NoAvailableUpstreamError, ProxyError, UpstreamError
 from app.core.logging import logger
 from app.db.base import get_session
-from app.db.models import User, Upstream
+from app.db.models import User, Upstream, ModelConfig
 from app.db.repositories.upstream_repo import UpstreamRepository
 from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse
 from app.services.redis import cache_mget, HEALTH_KEY
 from app.services.router import rank_upstreams_by_model, get_handler
+from sqlalchemy import select
 
 router = APIRouter(tags=["chat"])
 
@@ -25,7 +26,20 @@ async def chat_completions(
 ):
     try:
         upstreams = await UpstreamRepository(session).get_enabled()
-        ranked = await rank_upstreams_by_model(upstreams, request.model)
+
+        # Load manual prices from ModelConfig
+        manual_prices: dict[str, dict[str, float]] = {}
+        mc_result = await session.execute(
+            select(ModelConfig).where(ModelConfig.is_enabled.is_(True))
+        )
+        for mc in mc_result.scalars().all():
+            if mc.manual_prompt_price or mc.manual_completion_price:
+                manual_prices[mc.model_id] = {
+                    "prompt": float(mc.manual_prompt_price or 0),
+                    "completion": float(mc.manual_completion_price or 0),
+                }
+
+        ranked = await rank_upstreams_by_model(upstreams, request.model, manual_prices)
 
         # Filter out unhealthy upstreams
         health_keys = [HEALTH_KEY.format(u.id) for u in ranked]

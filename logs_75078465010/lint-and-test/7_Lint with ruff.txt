@@ -1,0 +1,93 @@
+﻿2026-06-20T00:53:14.2062205Z ##[group]Run pip install ruff
+2026-06-20T00:53:14.2062873Z [36;1mpip install ruff[0m
+2026-06-20T00:53:14.2063166Z [36;1mruff check app/ scripts/ --ignore=E501,F401[0m
+2026-06-20T00:53:14.2098480Z shell: /usr/bin/bash -e {0}
+2026-06-20T00:53:14.2098744Z env:
+2026-06-20T00:53:14.2099014Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2099447Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T00:53:14.2099873Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100243Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100605Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100968Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T00:53:14.2101473Z ##[endgroup]
+2026-06-20T00:53:14.9947323Z Collecting ruff
+2026-06-20T00:53:15.0484404Z   Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+2026-06-20T00:53:15.0633809Z Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.6 MB)
+2026-06-20T00:53:15.1283262Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 253.6 MB/s  0:00:00
+2026-06-20T00:53:15.1888956Z Installing collected packages: ruff
+2026-06-20T00:53:15.3323687Z Successfully installed ruff-0.15.18
+2026-06-20T00:53:15.4039058Z E712 Avoid equality comparisons to `True`; use `ApiKey.is_active:` for truth checks
+2026-06-20T00:53:15.4039818Z   --> app/services/auth.py:30:45
+2026-06-20T00:53:15.4040156Z    |
+2026-06-20T00:53:15.4040426Z 28 |         select(ApiKey)
+2026-06-20T00:53:15.4040795Z 29 |         .options(selectinload(ApiKey.user))
+2026-06-20T00:53:15.4041312Z 30 |         .where(ApiKey.key_hash == key_hash, ApiKey.is_active == True)
+2026-06-20T00:53:15.4041873Z    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4042274Z 31 |     )
+2026-06-20T00:53:15.4042791Z 32 |     result = await session.execute(stmt)
+2026-06-20T00:53:15.4043188Z    |
+2026-06-20T00:53:15.4043484Z help: Replace with `ApiKey.is_active`
+2026-06-20T00:53:15.4043759Z 
+2026-06-20T00:53:15.4043904Z E401 [*] Multiple imports on one line
+2026-06-20T00:53:15.4044302Z  --> scripts/create_user.py:2:1
+2026-06-20T00:53:15.4044546Z   |
+2026-06-20T00:53:15.4045118Z 1 | """一次性脚本：创建测试用户并生成 API Key，打印 key 供测试使用"""
+2026-06-20T00:53:15.4045428Z 2 | import asyncio, secrets, hashlib, hmac
+2026-06-20T00:53:15.4045707Z   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4045996Z 3 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4046312Z 4 | from app.db.models import User, ApiKey
+2026-06-20T00:53:15.4046567Z   |
+2026-06-20T00:53:15.4046753Z help: Split imports
+2026-06-20T00:53:15.4046887Z 
+2026-06-20T00:53:15.4047002Z E401 [*] Multiple imports on one line
+2026-06-20T00:53:15.4047276Z  --> scripts/smoke_test.py:2:1
+2026-06-20T00:53:15.4047509Z   |
+2026-06-20T00:53:15.4047784Z 1 | """冒烟测试：覆盖数据库、认证、代理、转发全链路"""
+2026-06-20T00:53:15.4048078Z 2 | import asyncio, sys, os, hashlib, secrets, json
+2026-06-20T00:53:15.4048387Z   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4048636Z 3 | import httpx
+2026-06-20T00:53:15.4048835Z   |
+2026-06-20T00:53:15.4049013Z help: Split imports
+2026-06-20T00:53:15.4049130Z 
+2026-06-20T00:53:15.4049248Z E402 Module level import not at top of file
+2026-06-20T00:53:15.4049538Z   --> scripts/smoke_test.py:9:1
+2026-06-20T00:53:15.4049771Z    |
+2026-06-20T00:53:15.4049999Z  7 | # 添加上游模块到 path
+2026-06-20T00:53:15.4050343Z  8 | sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-06-20T00:53:15.4050778Z  9 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4051084Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4051458Z 10 | from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
+2026-06-20T00:53:15.4051803Z    |
+2026-06-20T00:53:15.4051905Z 
+2026-06-20T00:53:15.4052015Z E402 Module level import not at top of file
+2026-06-20T00:53:15.4053366Z   --> scripts/smoke_test.py:10:1
+2026-06-20T00:53:15.4053746Z    |
+2026-06-20T00:53:15.4054252Z  8 | sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-06-20T00:53:15.4054889Z  9 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4055506Z 10 | from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
+2026-06-20T00:53:15.4056118Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4056548Z    |
+2026-06-20T00:53:15.4056691Z 
+2026-06-20T00:53:15.4056856Z F541 [*] f-string without any placeholders
+2026-06-20T00:53:15.4057271Z   --> scripts/smoke_test.py:85:11
+2026-06-20T00:53:15.4057635Z    |
+2026-06-20T00:53:15.4057907Z 83 |     body = resp.json()
+2026-06-20T00:53:15.4058765Z 84 |     assert "upstream_error" in str(body)
+2026-06-20T00:53:15.4060005Z 85 |     print(f"[PASS] POST /v1/chat/completions — 上游不可达返回 502")
+2026-06-20T00:53:15.4060560Z    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4061020Z    |
+2026-06-20T00:53:15.4061323Z help: Remove extraneous `f` prefix
+2026-06-20T00:53:15.4061590Z 
+2026-06-20T00:53:15.4061716Z F541 [*] f-string without any placeholders
+2026-06-20T00:53:15.4062002Z    --> scripts/smoke_test.py:107:15
+2026-06-20T00:53:15.4062250Z     |
+2026-06-20T00:53:15.4062711Z 105 |         text = body.decode()
+2026-06-20T00:53:15.4063351Z 106 |         assert "error" in text.lower(), f"SSE 应含 error: {text[:200]}"
+2026-06-20T00:53:15.4064029Z 107 |         print(f"[PASS] POST /v1/chat/completions (stream) — 上游错误正确编码为 SSE")
+2026-06-20T00:53:15.4064442Z     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4064751Z     |
+2026-06-20T00:53:15.4065061Z help: Remove extraneous `f` prefix
+2026-06-20T00:53:15.4065235Z 
+2026-06-20T00:53:15.4065323Z Found 7 errors.
+2026-06-20T00:53:15.4065746Z [*] 4 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+2026-06-20T00:53:15.4076621Z ##[error]Process completed with exit code 1.

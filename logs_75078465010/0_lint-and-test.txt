@@ -1,0 +1,655 @@
+﻿2026-06-20T00:52:35.9935462Z Current runner version: '2.335.1'
+2026-06-20T00:52:35.9972721Z ##[group]Runner Image Provisioner
+2026-06-20T00:52:35.9974178Z Hosted Compute Agent
+2026-06-20T00:52:35.9975146Z Version: 20260611.554
+2026-06-20T00:52:35.9976110Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+2026-06-20T00:52:35.9977321Z Build Date: 2026-06-11T21:40:46Z
+2026-06-20T00:52:35.9978372Z Worker ID: {bcd4a056-ff09-4bf3-9c7d-0a0b2257541f}
+2026-06-20T00:52:35.9979511Z Azure Region: eastus
+2026-06-20T00:52:35.9980500Z ##[endgroup]
+2026-06-20T00:52:35.9983532Z ##[group]Operating System
+2026-06-20T00:52:35.9984585Z Ubuntu
+2026-06-20T00:52:35.9985351Z 24.04.4
+2026-06-20T00:52:35.9986156Z LTS
+2026-06-20T00:52:35.9986996Z ##[endgroup]
+2026-06-20T00:52:35.9987823Z ##[group]Runner Image
+2026-06-20T00:52:35.9988817Z Image: ubuntu-24.04
+2026-06-20T00:52:35.9989669Z Version: 20260615.205.1
+2026-06-20T00:52:35.9991762Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-20T00:52:35.9994530Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+2026-06-20T00:52:35.9996134Z ##[endgroup]
+2026-06-20T00:52:35.9997932Z ##[group]GITHUB_TOKEN Permissions
+2026-06-20T00:52:36.0001096Z Contents: read
+2026-06-20T00:52:36.0001989Z Metadata: read
+2026-06-20T00:52:36.0003290Z Packages: read
+2026-06-20T00:52:36.0004139Z ##[endgroup]
+2026-06-20T00:52:36.0007397Z Secret source: Actions
+2026-06-20T00:52:36.0008972Z Prepare workflow directory
+2026-06-20T00:52:36.0628014Z Prepare all required actions
+2026-06-20T00:52:36.0685103Z Getting action download info
+2026-06-20T00:52:36.3946041Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-06-20T00:52:36.4848913Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+2026-06-20T00:52:36.5718302Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-06-20T00:52:36.8406732Z Complete job name: lint-and-test
+2026-06-20T00:52:36.8922969Z ##[group]Checking docker version
+2026-06-20T00:52:36.8936701Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-06-20T00:52:36.9608288Z '1.48'
+2026-06-20T00:52:36.9633378Z Docker daemon API version: '1.48'
+2026-06-20T00:52:36.9634542Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-06-20T00:52:36.9901491Z '1.48'
+2026-06-20T00:52:36.9904579Z Docker client API version: '1.48'
+2026-06-20T00:52:36.9910839Z ##[endgroup]
+2026-06-20T00:52:36.9915155Z ##[group]Clean up resources from previous jobs
+2026-06-20T00:52:36.9923397Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=728b02"
+2026-06-20T00:52:37.0161589Z ##[command]/usr/bin/docker network prune --force --filter "label=728b02"
+2026-06-20T00:52:37.0410741Z ##[endgroup]
+2026-06-20T00:52:37.0411517Z ##[group]Create local container network
+2026-06-20T00:52:37.0427055Z ##[command]/usr/bin/docker network create --label 728b02 github_network_31a5c70f6e7840aeaeb590b64085df9c
+2026-06-20T00:52:37.1247947Z 3a1d9fb974bae4eede0232a03af56100e677ff52a196292e5a40e08c6fc378b4
+2026-06-20T00:52:37.1268400Z ##[endgroup]
+2026-06-20T00:52:37.1293459Z ##[group]Starting postgres service container
+2026-06-20T00:52:37.1319355Z ##[command]/usr/bin/docker pull postgres:16
+2026-06-20T00:52:37.4077344Z 16: Pulling from library/postgres
+2026-06-20T00:52:37.4998686Z 72c03230f136: Pulling fs layer
+2026-06-20T00:52:37.5002033Z 0352260f8693: Pulling fs layer
+2026-06-20T00:52:37.5003889Z 1b70b78d9f6a: Pulling fs layer
+2026-06-20T00:52:37.5005613Z 9a63031ae85f: Pulling fs layer
+2026-06-20T00:52:37.5008284Z dc4ac08b472d: Pulling fs layer
+2026-06-20T00:52:37.5010943Z 11ce352c2a65: Pulling fs layer
+2026-06-20T00:52:37.5013335Z 1bdf4f8bbaae: Pulling fs layer
+2026-06-20T00:52:37.5014879Z 98a9ab002461: Pulling fs layer
+2026-06-20T00:52:37.5016029Z abdc52f1f685: Pulling fs layer
+2026-06-20T00:52:37.5016877Z f60f4e1c4498: Pulling fs layer
+2026-06-20T00:52:37.5017705Z 278027784603: Pulling fs layer
+2026-06-20T00:52:37.5018973Z 5a3483ead735: Pulling fs layer
+2026-06-20T00:52:37.5019919Z 09188ae9fe23: Pulling fs layer
+2026-06-20T00:52:37.5020875Z 00227982303c: Pulling fs layer
+2026-06-20T00:52:37.5021823Z 9a63031ae85f: Waiting
+2026-06-20T00:52:37.5022802Z dc4ac08b472d: Waiting
+2026-06-20T00:52:37.5023600Z 11ce352c2a65: Waiting
+2026-06-20T00:52:37.5024392Z 1bdf4f8bbaae: Waiting
+2026-06-20T00:52:37.5025182Z 98a9ab002461: Waiting
+2026-06-20T00:52:37.5025988Z abdc52f1f685: Waiting
+2026-06-20T00:52:37.5026789Z f60f4e1c4498: Waiting
+2026-06-20T00:52:37.5027752Z 278027784603: Waiting
+2026-06-20T00:52:37.5028754Z 09188ae9fe23: Waiting
+2026-06-20T00:52:37.5029666Z 00227982303c: Waiting
+2026-06-20T00:52:37.5030670Z 5a3483ead735: Waiting
+2026-06-20T00:52:37.5269466Z 0352260f8693: Verifying Checksum
+2026-06-20T00:52:37.5271389Z 0352260f8693: Download complete
+2026-06-20T00:52:37.5646329Z 1b70b78d9f6a: Verifying Checksum
+2026-06-20T00:52:37.5648241Z 1b70b78d9f6a: Download complete
+2026-06-20T00:52:37.5806932Z 9a63031ae85f: Verifying Checksum
+2026-06-20T00:52:37.5808647Z 9a63031ae85f: Download complete
+2026-06-20T00:52:37.6511657Z 72c03230f136: Verifying Checksum
+2026-06-20T00:52:37.6513661Z 72c03230f136: Download complete
+2026-06-20T00:52:37.6515216Z dc4ac08b472d: Verifying Checksum
+2026-06-20T00:52:37.6517005Z 11ce352c2a65: Verifying Checksum
+2026-06-20T00:52:37.6518834Z 11ce352c2a65: Download complete
+2026-06-20T00:52:37.6520696Z dc4ac08b472d: Download complete
+2026-06-20T00:52:37.6757736Z 1bdf4f8bbaae: Verifying Checksum
+2026-06-20T00:52:37.6759978Z 1bdf4f8bbaae: Download complete
+2026-06-20T00:52:37.6784285Z 98a9ab002461: Verifying Checksum
+2026-06-20T00:52:37.6786764Z 98a9ab002461: Download complete
+2026-06-20T00:52:37.7084071Z f60f4e1c4498: Verifying Checksum
+2026-06-20T00:52:37.7087493Z f60f4e1c4498: Download complete
+2026-06-20T00:52:37.7250099Z 278027784603: Verifying Checksum
+2026-06-20T00:52:37.7273553Z 278027784603: Download complete
+2026-06-20T00:52:37.7620127Z 5a3483ead735: Verifying Checksum
+2026-06-20T00:52:37.7631539Z 5a3483ead735: Download complete
+2026-06-20T00:52:37.7865014Z 09188ae9fe23: Verifying Checksum
+2026-06-20T00:52:37.7866813Z 09188ae9fe23: Download complete
+2026-06-20T00:52:37.8238929Z 00227982303c: Verifying Checksum
+2026-06-20T00:52:37.8240634Z 00227982303c: Download complete
+2026-06-20T00:52:38.1889241Z abdc52f1f685: Verifying Checksum
+2026-06-20T00:52:38.1903395Z abdc52f1f685: Download complete
+2026-06-20T00:52:39.0391826Z 72c03230f136: Pull complete
+2026-06-20T00:52:39.8698774Z 0352260f8693: Pull complete
+2026-06-20T00:52:40.0815830Z 1b70b78d9f6a: Pull complete
+2026-06-20T00:52:40.1391353Z 9a63031ae85f: Pull complete
+2026-06-20T00:52:40.4958004Z dc4ac08b472d: Pull complete
+2026-06-20T00:52:40.5901534Z 11ce352c2a65: Pull complete
+2026-06-20T00:52:40.5988475Z 1bdf4f8bbaae: Pull complete
+2026-06-20T00:52:40.6100866Z 98a9ab002461: Pull complete
+2026-06-20T00:52:44.9685533Z abdc52f1f685: Pull complete
+2026-06-20T00:52:44.9877826Z f60f4e1c4498: Pull complete
+2026-06-20T00:52:45.0039614Z 278027784603: Pull complete
+2026-06-20T00:52:45.0206427Z 5a3483ead735: Pull complete
+2026-06-20T00:52:45.0309681Z 09188ae9fe23: Pull complete
+2026-06-20T00:52:45.0428764Z 00227982303c: Pull complete
+2026-06-20T00:52:45.0471272Z Digest: sha256:081f1bc7bd5e143dbb6e487b710bbc27712cdcfaced4c071b8e47349aa1b4171
+2026-06-20T00:52:45.0483514Z Status: Downloaded newer image for postgres:16
+2026-06-20T00:52:45.0520074Z docker.io/library/postgres:16
+2026-06-20T00:52:45.0618924Z ##[command]/usr/bin/docker create --name 246b87e6a27a4aa48e1f1ee8fd6dd689_postgres16_469f95 --label 728b02 --network github_network_31a5c70f6e7840aeaeb590b64085df9c --network-alias postgres -p 5432:5432 --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 -e "POSTGRES_USER=relay" -e "POSTGRES_PASSWORD=relay_test" -e "POSTGRES_DB=relay_test" -e GITHUB_ACTIONS=true -e CI=true postgres:16
+2026-06-20T00:52:45.0903683Z 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:45.0935226Z ##[command]/usr/bin/docker start 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:45.4174090Z 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:45.4197355Z ##[command]/usr/bin/docker ps --all --filter id=667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-20T00:52:45.4370315Z 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6 Up Less than a second (health: starting)
+2026-06-20T00:52:45.4398331Z ##[command]/usr/bin/docker port 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:45.4591646Z 5432/tcp -> 0.0.0.0:5432
+2026-06-20T00:52:45.4608854Z 5432/tcp -> [::]:5432
+2026-06-20T00:52:45.4667227Z ##[endgroup]
+2026-06-20T00:52:45.4669092Z ##[group]Starting redis service container
+2026-06-20T00:52:45.4670770Z ##[command]/usr/bin/docker pull redis:7-alpine
+2026-06-20T00:52:45.6828265Z 7-alpine: Pulling from library/redis
+2026-06-20T00:52:45.7529332Z 897d797d2723: Pulling fs layer
+2026-06-20T00:52:45.7530628Z c14c7509f545: Pulling fs layer
+2026-06-20T00:52:45.7531272Z f546396032e0: Pulling fs layer
+2026-06-20T00:52:45.7531858Z a300455a02bb: Pulling fs layer
+2026-06-20T00:52:45.7532812Z 941ebb020cf0: Pulling fs layer
+2026-06-20T00:52:45.7533363Z 4f4fb700ef54: Pulling fs layer
+2026-06-20T00:52:45.7533905Z 677c7c5aa821: Pulling fs layer
+2026-06-20T00:52:45.7549436Z a300455a02bb: Waiting
+2026-06-20T00:52:45.7550403Z 941ebb020cf0: Waiting
+2026-06-20T00:52:45.7551993Z 4f4fb700ef54: Waiting
+2026-06-20T00:52:45.7552864Z 677c7c5aa821: Waiting
+2026-06-20T00:52:45.7829551Z c14c7509f545: Verifying Checksum
+2026-06-20T00:52:45.7832990Z c14c7509f545: Download complete
+2026-06-20T00:52:45.7932858Z f546396032e0: Verifying Checksum
+2026-06-20T00:52:45.7933678Z f546396032e0: Download complete
+2026-06-20T00:52:45.8286173Z 897d797d2723: Download complete
+2026-06-20T00:52:45.8356924Z 941ebb020cf0: Verifying Checksum
+2026-06-20T00:52:45.8357749Z 941ebb020cf0: Download complete
+2026-06-20T00:52:45.8857168Z 4f4fb700ef54: Verifying Checksum
+2026-06-20T00:52:45.8859522Z 4f4fb700ef54: Download complete
+2026-06-20T00:52:45.8860144Z 677c7c5aa821: Verifying Checksum
+2026-06-20T00:52:45.8860535Z 677c7c5aa821: Download complete
+2026-06-20T00:52:45.9705061Z a300455a02bb: Verifying Checksum
+2026-06-20T00:52:45.9706471Z a300455a02bb: Download complete
+2026-06-20T00:52:46.0483312Z 897d797d2723: Pull complete
+2026-06-20T00:52:46.1180094Z c14c7509f545: Pull complete
+2026-06-20T00:52:46.3741391Z f546396032e0: Pull complete
+2026-06-20T00:52:46.7147638Z a300455a02bb: Pull complete
+2026-06-20T00:52:46.7248159Z 941ebb020cf0: Pull complete
+2026-06-20T00:52:46.7393711Z 4f4fb700ef54: Pull complete
+2026-06-20T00:52:46.7691658Z 677c7c5aa821: Pull complete
+2026-06-20T00:52:46.7784929Z Digest: sha256:6ab0b6e7381779332f97b8ca76193e45b0756f38d4c0dcda72dbb3c32061ab99
+2026-06-20T00:52:46.7813134Z Status: Downloaded newer image for redis:7-alpine
+2026-06-20T00:52:46.7824163Z docker.io/library/redis:7-alpine
+2026-06-20T00:52:46.7835256Z ##[command]/usr/bin/docker create --name febd694c3cad4972b8b0de7e06a5bf20_redis7alpine_56bc76 --label 728b02 --network github_network_31a5c70f6e7840aeaeb590b64085df9c --network-alias redis -p 6379:6379 --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5 -e GITHUB_ACTIONS=true -e CI=true redis:7-alpine
+2026-06-20T00:52:46.8128225Z 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:52:46.8143818Z ##[command]/usr/bin/docker start 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:52:47.0093654Z 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:52:47.0120186Z ##[command]/usr/bin/docker ps --all --filter id=327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-20T00:52:47.0282831Z 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0 Up Less than a second (health: starting)
+2026-06-20T00:52:47.0298054Z ##[command]/usr/bin/docker port 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:52:47.0449372Z 6379/tcp -> 0.0.0.0:6379
+2026-06-20T00:52:47.0449972Z 6379/tcp -> [::]:6379
+2026-06-20T00:52:47.0464846Z ##[endgroup]
+2026-06-20T00:52:47.0477187Z ##[group]Waiting for all services to be ready
+2026-06-20T00:52:47.0491301Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:47.0629755Z starting
+2026-06-20T00:52:47.0652077Z postgres service is starting, waiting 2 seconds before checking again.
+2026-06-20T00:52:49.0654155Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:49.0790924Z starting
+2026-06-20T00:52:49.0805466Z postgres service is starting, waiting 3 seconds before checking again.
+2026-06-20T00:52:52.9736738Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:52:52.9873069Z starting
+2026-06-20T00:52:52.9887331Z postgres service is starting, waiting 8 seconds before checking again.
+2026-06-20T00:53:01.0934439Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:53:01.1075741Z healthy
+2026-06-20T00:53:01.1094576Z postgres service is healthy.
+2026-06-20T00:53:01.1095461Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:53:01.1227159Z healthy
+2026-06-20T00:53:01.1241796Z redis service is healthy.
+2026-06-20T00:53:01.1242713Z ##[endgroup]
+2026-06-20T00:53:01.1508972Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T00:53:01.1516655Z ##[group]Run actions/checkout@v4
+2026-06-20T00:53:01.1517423Z with:
+2026-06-20T00:53:01.1517660Z   repository: chenjingquan-hntb/APILLM
+2026-06-20T00:53:01.1520483Z   token: ***
+2026-06-20T00:53:01.1520699Z   ssh-strict: true
+2026-06-20T00:53:01.1520915Z   ssh-user: git
+2026-06-20T00:53:01.1521133Z   persist-credentials: true
+2026-06-20T00:53:01.1521373Z   clean: true
+2026-06-20T00:53:01.1521590Z   sparse-checkout-cone-mode: true
+2026-06-20T00:53:01.1521856Z   fetch-depth: 1
+2026-06-20T00:53:01.1522058Z   fetch-tags: false
+2026-06-20T00:53:01.1522282Z   show-progress: true
+2026-06-20T00:53:01.1522675Z   lfs: false
+2026-06-20T00:53:01.1522927Z   submodules: false
+2026-06-20T00:53:01.1523153Z   set-safe-directory: true
+2026-06-20T00:53:01.1523634Z ##[endgroup]
+2026-06-20T00:53:01.2617845Z Syncing repository: chenjingquan-hntb/APILLM
+2026-06-20T00:53:01.2619801Z ##[group]Getting Git version info
+2026-06-20T00:53:01.2620326Z Working directory is '/home/runner/work/APILLM/APILLM'
+2026-06-20T00:53:01.2621102Z [command]/usr/bin/git version
+2026-06-20T00:53:01.2695106Z git version 2.54.0
+2026-06-20T00:53:01.2754793Z ##[endgroup]
+2026-06-20T00:53:01.2768794Z Temporarily overriding HOME='/home/runner/work/_temp/e513b973-f154-4264-8072-dd0ee12c8a6d' before making global git config changes
+2026-06-20T00:53:01.2770174Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-20T00:53:01.2777314Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/APILLM/APILLM
+2026-06-20T00:53:01.2826601Z Deleting the contents of '/home/runner/work/APILLM/APILLM'
+2026-06-20T00:53:01.2831069Z ##[group]Initializing the repository
+2026-06-20T00:53:01.2836504Z [command]/usr/bin/git init /home/runner/work/APILLM/APILLM
+2026-06-20T00:53:01.2920254Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-20T00:53:01.2921065Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-20T00:53:01.2922008Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-20T00:53:01.2922981Z hint: call:
+2026-06-20T00:53:01.2923467Z hint:
+2026-06-20T00:53:01.2924064Z hint: 	git config --global init.defaultBranch <name>
+2026-06-20T00:53:01.2924712Z hint:
+2026-06-20T00:53:01.2925366Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-20T00:53:01.2926275Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-20T00:53:01.2927070Z hint:
+2026-06-20T00:53:01.2927540Z hint: 	git branch -m <name>
+2026-06-20T00:53:01.2928059Z hint:
+2026-06-20T00:53:01.2928764Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-20T00:53:01.2929826Z Initialized empty Git repository in /home/runner/work/APILLM/APILLM/.git/
+2026-06-20T00:53:01.2940122Z [command]/usr/bin/git remote add origin https://github.com/chenjingquan-hntb/APILLM
+2026-06-20T00:53:01.2985973Z ##[endgroup]
+2026-06-20T00:53:01.2986772Z ##[group]Disabling automatic garbage collection
+2026-06-20T00:53:01.2990402Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-20T00:53:01.3023943Z ##[endgroup]
+2026-06-20T00:53:01.3024681Z ##[group]Setting up auth
+2026-06-20T00:53:01.3032887Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-20T00:53:01.3069167Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-20T00:53:01.3402956Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-20T00:53:01.3440301Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-20T00:53:01.3699776Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-20T00:53:01.3741097Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-20T00:53:01.3988478Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-20T00:53:01.4028512Z ##[endgroup]
+2026-06-20T00:53:01.4029464Z ##[group]Fetching the repository
+2026-06-20T00:53:01.4039146Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +f3898319d1bb76783cfe01d920685599ad70be67:refs/remotes/origin/main
+2026-06-20T00:53:01.6684220Z From https://github.com/chenjingquan-hntb/APILLM
+2026-06-20T00:53:01.6689614Z  * [new ref]         f3898319d1bb76783cfe01d920685599ad70be67 -> origin/main
+2026-06-20T00:53:01.6721648Z ##[endgroup]
+2026-06-20T00:53:01.6722663Z ##[group]Determining the checkout info
+2026-06-20T00:53:01.6724492Z ##[endgroup]
+2026-06-20T00:53:01.6737268Z [command]/usr/bin/git sparse-checkout disable
+2026-06-20T00:53:01.6784089Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-20T00:53:01.6893627Z ##[group]Checking out the ref
+2026-06-20T00:53:01.6913180Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-20T00:53:01.7196588Z Switched to a new branch 'main'
+2026-06-20T00:53:01.7198939Z branch 'main' set up to track 'origin/main'.
+2026-06-20T00:53:01.7260953Z ##[endgroup]
+2026-06-20T00:53:01.7264219Z [command]/usr/bin/git log -1 --format=%H
+2026-06-20T00:53:01.7264780Z f3898319d1bb76783cfe01d920685599ad70be67
+2026-06-20T00:53:01.7484748Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T00:53:01.7487648Z ##[group]Run actions/setup-python@v5
+2026-06-20T00:53:01.7488049Z with:
+2026-06-20T00:53:01.7488341Z   python-version: 3.12
+2026-06-20T00:53:01.7488680Z   check-latest: false
+2026-06-20T00:53:01.7493584Z   token: ***
+2026-06-20T00:53:01.7493924Z   update-environment: true
+2026-06-20T00:53:01.7494308Z   allow-prereleases: false
+2026-06-20T00:53:01.7494663Z   freethreaded: false
+2026-06-20T00:53:01.7494991Z ##[endgroup]
+2026-06-20T00:53:01.9066089Z ##[group]Installed versions
+2026-06-20T00:53:01.9152769Z (node:2636) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-20T00:53:01.9154223Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-20T00:53:01.9155030Z Successfully set up CPython (3.12.13)
+2026-06-20T00:53:01.9156012Z ##[endgroup]
+2026-06-20T00:53:01.9978668Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T00:53:01.9979941Z ##[group]Run actions/cache@v4
+2026-06-20T00:53:01.9980191Z with:
+2026-06-20T00:53:01.9980393Z   path: ~/.cache/pip
+2026-06-20T00:53:01.9980785Z   key: Linux-pip-3cfd6a4963cce42edb3c5c7799e1f9f76bfdcdf26cbcfd28cf2811a85ecc1b7e
+2026-06-20T00:53:01.9981222Z   restore-keys: Linux-pip-
+
+2026-06-20T00:53:01.9981474Z   enableCrossOsArchive: false
+2026-06-20T00:53:01.9981725Z   fail-on-cache-miss: false
+2026-06-20T00:53:01.9981951Z   lookup-only: false
+2026-06-20T00:53:01.9982161Z   save-always: false
+2026-06-20T00:53:01.9982630Z env:
+2026-06-20T00:53:01.9983007Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:01.9983658Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T00:53:01.9984090Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:01.9984466Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:01.9984839Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:01.9985215Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T00:53:01.9985537Z ##[endgroup]
+2026-06-20T00:53:02.1216735Z (node:2655) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-20T00:53:02.1218142Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-20T00:53:02.1868701Z Cache not found for input keys: Linux-pip-3cfd6a4963cce42edb3c5c7799e1f9f76bfdcdf26cbcfd28cf2811a85ecc1b7e, Linux-pip-
+2026-06-20T00:53:02.1959603Z ##[group]Run python -m pip install --upgrade pip
+2026-06-20T00:53:02.1960069Z [36;1mpython -m pip install --upgrade pip[0m
+2026-06-20T00:53:02.1960402Z [36;1mpip install -e ".[dev]"[0m
+2026-06-20T00:53:02.2004153Z shell: /usr/bin/bash -e {0}
+2026-06-20T00:53:02.2004429Z env:
+2026-06-20T00:53:02.2004706Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:02.2005153Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T00:53:02.2005605Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:02.2005986Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:02.2006357Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:02.2006732Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T00:53:02.2007054Z ##[endgroup]
+2026-06-20T00:53:04.1046429Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.12.13/x64/lib/python3.12/site-packages (26.1.2)
+2026-06-20T00:53:04.6914925Z Obtaining file:///home/runner/work/APILLM/APILLM
+2026-06-20T00:53:04.6931332Z   Installing build dependencies: started
+2026-06-20T00:53:05.3907590Z   Installing build dependencies: finished with status 'done'
+2026-06-20T00:53:05.3914722Z   Checking if build backend supports build_editable: started
+2026-06-20T00:53:05.4417682Z   Checking if build backend supports build_editable: finished with status 'done'
+2026-06-20T00:53:05.4426242Z   Getting requirements to build editable: started
+2026-06-20T00:53:05.6358531Z   Getting requirements to build editable: finished with status 'done'
+2026-06-20T00:53:05.6371725Z   Installing backend dependencies: started
+2026-06-20T00:53:06.1474574Z   Installing backend dependencies: finished with status 'done'
+2026-06-20T00:53:06.1483245Z   Preparing editable metadata (pyproject.toml): started
+2026-06-20T00:53:06.3450805Z   Preparing editable metadata (pyproject.toml): finished with status 'done'
+2026-06-20T00:53:06.4197587Z Collecting alembic>=1.14.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.4743663Z   Downloading alembic-1.18.4-py3-none-any.whl.metadata (7.2 kB)
+2026-06-20T00:53:06.5179705Z Collecting asyncpg>=0.30.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.5217583Z   Downloading asyncpg-0.31.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (4.4 kB)
+2026-06-20T00:53:06.5558069Z Collecting fastapi>=0.115.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.5603362Z   Downloading fastapi-0.137.2-py3-none-any.whl.metadata (27 kB)
+2026-06-20T00:53:06.5821474Z Collecting httpx>=0.28.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.5865149Z   Downloading httpx-0.28.1-py3-none-any.whl.metadata (7.1 kB)
+2026-06-20T00:53:06.6113735Z Collecting passlib>=1.7.4 (from passlib[bcrypt]>=1.7.4->llm-relay==0.1.0)
+2026-06-20T00:53:06.6176806Z   Downloading passlib-1.7.4-py2.py3-none-any.whl.metadata (1.7 kB)
+2026-06-20T00:53:06.6324934Z Collecting pydantic-settings>=2.7.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.6359791Z   Downloading pydantic_settings-2.14.2-py3-none-any.whl.metadata (3.4 kB)
+2026-06-20T00:53:06.6707024Z Collecting redis>=5.0.0 (from redis[asyncio]>=5.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:06.6745917Z   Downloading redis-8.0.0-py3-none-any.whl.metadata (13 kB)
+2026-06-20T00:53:06.9043005Z Collecting sqlalchemy>=2.0.0 (from sqlalchemy[asyncio]>=2.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:06.9085116Z   Downloading sqlalchemy-2.0.51-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+2026-06-20T00:53:06.9261981Z Collecting structlog>=25.0.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.9299332Z   Downloading structlog-26.1.0-py3-none-any.whl.metadata (9.7 kB)
+2026-06-20T00:53:06.9506261Z Collecting uvicorn>=0.34.0 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:06.9541321Z   Downloading uvicorn-0.49.0-py3-none-any.whl.metadata (6.7 kB)
+2026-06-20T00:53:06.9735482Z Collecting pytest-asyncio>=0.24.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:06.9770015Z   Downloading pytest_asyncio-1.4.0-py3-none-any.whl.metadata (4.1 kB)
+2026-06-20T00:53:07.0005814Z Collecting pytest>=8.0.0 (from llm-relay==0.1.0)
+2026-06-20T00:53:07.0040338Z   Downloading pytest-9.1.1-py3-none-any.whl.metadata (7.6 kB)
+2026-06-20T00:53:07.0231041Z Collecting Mako (from alembic>=1.14.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.0265492Z   Downloading mako-1.3.12-py3-none-any.whl.metadata (2.9 kB)
+2026-06-20T00:53:07.0400617Z Collecting typing-extensions>=4.12 (from alembic>=1.14.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.0507824Z   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+2026-06-20T00:53:07.0833823Z Collecting starlette>=0.46.0 (from fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.0873760Z   Downloading starlette-1.3.1-py3-none-any.whl.metadata (6.4 kB)
+2026-06-20T00:53:07.1814994Z Collecting pydantic>=2.9.0 (from fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.1859922Z   Downloading pydantic-2.13.4-py3-none-any.whl.metadata (109 kB)
+2026-06-20T00:53:07.2027121Z Collecting typing-inspection>=0.4.2 (from fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.2065600Z   Downloading typing_inspection-0.4.2-py3-none-any.whl.metadata (2.6 kB)
+2026-06-20T00:53:07.2159412Z Collecting annotated-doc>=0.0.2 (from fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.2198070Z   Downloading annotated_doc-0.0.4-py3-none-any.whl.metadata (6.6 kB)
+2026-06-20T00:53:07.2379639Z Collecting anyio (from httpx>=0.28.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.2437441Z   Downloading anyio-4.14.0-py3-none-any.whl.metadata (4.6 kB)
+2026-06-20T00:53:07.2605924Z Collecting certifi (from httpx>=0.28.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.2641441Z   Downloading certifi-2026.6.17-py3-none-any.whl.metadata (2.5 kB)
+2026-06-20T00:53:07.2792902Z Collecting httpcore==1.* (from httpx>=0.28.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.2828808Z   Downloading httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+2026-06-20T00:53:07.2970289Z Collecting idna (from httpx>=0.28.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.3005124Z   Downloading idna-3.18-py3-none-any.whl.metadata (6.1 kB)
+2026-06-20T00:53:07.3113558Z Collecting h11>=0.16 (from httpcore==1.*->httpx>=0.28.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.3168472Z   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+2026-06-20T00:53:07.3535602Z Collecting bcrypt>=3.1.0 (from passlib[bcrypt]>=1.7.4->llm-relay==0.1.0)
+2026-06-20T00:53:07.3583213Z   Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (10 kB)
+2026-06-20T00:53:07.3699352Z Collecting annotated-types>=0.6.0 (from pydantic>=2.9.0->fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.3733566Z   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+2026-06-20T00:53:07.9557431Z Collecting pydantic-core==2.46.4 (from pydantic>=2.9.0->fastapi>=0.115.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.9613484Z   Downloading pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+2026-06-20T00:53:07.9796045Z Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.7.0->llm-relay==0.1.0)
+2026-06-20T00:53:07.9840177Z   Downloading python_dotenv-1.2.2-py3-none-any.whl.metadata (27 kB)
+2026-06-20T00:53:07.9978985Z Collecting iniconfig>=1.0.1 (from pytest>=8.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.0038023Z   Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-20T00:53:08.0171628Z Collecting packaging>=22 (from pytest>=8.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.0184916Z   Using cached packaging-26.2-py3-none-any.whl.metadata (3.5 kB)
+2026-06-20T00:53:08.0275480Z Collecting pluggy<2,>=1.5 (from pytest>=8.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.0288147Z   Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+2026-06-20T00:53:08.0432293Z Collecting pygments>=2.7.2 (from pytest>=8.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.0548059Z   Downloading pygments-2.20.0-py3-none-any.whl.metadata (2.5 kB)
+2026-06-20T00:53:08.0641627Z WARNING: redis 8.0.0 does not provide the extra 'asyncio'
+2026-06-20T00:53:08.2075938Z Collecting greenlet>=1 (from sqlalchemy>=2.0.0->sqlalchemy[asyncio]>=2.0.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.2120063Z   Downloading greenlet-3.5.2-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl.metadata (3.8 kB)
+2026-06-20T00:53:08.2383647Z Collecting click>=7.0 (from uvicorn>=0.34.0->uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.2429869Z   Downloading click-8.4.1-py3-none-any.whl.metadata (2.6 kB)
+2026-06-20T00:53:08.2707634Z Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.2744887Z   Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (3.5 kB)
+2026-06-20T00:53:08.3081078Z Collecting pyyaml>=5.1 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.3120329Z   Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.4 kB)
+2026-06-20T00:53:08.3440027Z Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.3489708Z   Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (4.9 kB)
+2026-06-20T00:53:08.4134540Z Collecting watchfiles>=0.20 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.4177296Z   Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+2026-06-20T00:53:08.4939726Z Collecting websockets>=10.4 (from uvicorn[standard]>=0.34.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.4997688Z   Downloading websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (6.8 kB)
+2026-06-20T00:53:08.5485696Z Collecting MarkupSafe>=0.9.2 (from Mako->alembic>=1.14.0->llm-relay==0.1.0)
+2026-06-20T00:53:08.5527029Z   Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+2026-06-20T00:53:08.5617638Z Downloading alembic-1.18.4-py3-none-any.whl (263 kB)
+2026-06-20T00:53:08.5688541Z Downloading asyncpg-0.31.0-cp312-cp312-manylinux_2_28_x86_64.whl (3.5 MB)
+2026-06-20T00:53:08.5901461Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.5/3.5 MB 179.8 MB/s  0:00:00
+2026-06-20T00:53:08.5957696Z Downloading fastapi-0.137.2-py3-none-any.whl (122 kB)
+2026-06-20T00:53:08.6016449Z Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+2026-06-20T00:53:08.6079340Z Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+2026-06-20T00:53:08.6135024Z Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+2026-06-20T00:53:08.6196640Z Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+2026-06-20T00:53:08.6252946Z Downloading passlib-1.7.4-py2.py3-none-any.whl (525 kB)
+2026-06-20T00:53:08.6311123Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 525.6/525.6 kB 88.3 MB/s  0:00:00
+2026-06-20T00:53:08.6353639Z Downloading bcrypt-5.0.0-cp39-abi3-manylinux_2_34_x86_64.whl (278 kB)
+2026-06-20T00:53:08.6418423Z Downloading pydantic-2.13.4-py3-none-any.whl (472 kB)
+2026-06-20T00:53:08.6514869Z Downloading pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+2026-06-20T00:53:08.6623644Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 219.2 MB/s  0:00:00
+2026-06-20T00:53:08.6664837Z Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+2026-06-20T00:53:08.6718361Z Downloading pydantic_settings-2.14.2-py3-none-any.whl (61 kB)
+2026-06-20T00:53:08.6793619Z Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+2026-06-20T00:53:08.6835033Z Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+2026-06-20T00:53:08.6916994Z Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+2026-06-20T00:53:08.6947090Z Using cached packaging-26.2-py3-none-any.whl (100 kB)
+2026-06-20T00:53:08.6989431Z Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+2026-06-20T00:53:08.7070413Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 179.9 MB/s  0:00:00
+2026-06-20T00:53:08.7109658Z Downloading pytest_asyncio-1.4.0-py3-none-any.whl (16 kB)
+2026-06-20T00:53:08.7173520Z Downloading python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+2026-06-20T00:53:08.7235350Z Downloading redis-8.0.0-py3-none-any.whl (499 kB)
+2026-06-20T00:53:08.7306274Z Downloading sqlalchemy-2.0.51-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (3.4 MB)
+2026-06-20T00:53:08.7457054Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 256.4 MB/s  0:00:00
+2026-06-20T00:53:08.7497765Z Downloading greenlet-3.5.2-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (613 kB)
+2026-06-20T00:53:08.7548777Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 613.7/613.7 kB 131.8 MB/s  0:00:00
+2026-06-20T00:53:08.7589550Z Downloading starlette-1.3.1-py3-none-any.whl (73 kB)
+2026-06-20T00:53:08.7662977Z Downloading anyio-4.14.0-py3-none-any.whl (123 kB)
+2026-06-20T00:53:08.7720185Z Downloading idna-3.18-py3-none-any.whl (65 kB)
+2026-06-20T00:53:08.7778764Z Downloading structlog-26.1.0-py3-none-any.whl (73 kB)
+2026-06-20T00:53:08.7838785Z Downloading typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-06-20T00:53:08.7891549Z Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+2026-06-20T00:53:08.7947035Z Downloading uvicorn-0.49.0-py3-none-any.whl (71 kB)
+2026-06-20T00:53:08.8006343Z Downloading click-8.4.1-py3-none-any.whl (116 kB)
+2026-06-20T00:53:08.8067986Z Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (523 kB)
+2026-06-20T00:53:08.8136934Z Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+2026-06-20T00:53:08.8214432Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 147.2 MB/s  0:00:00
+2026-06-20T00:53:08.8245543Z Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+2026-06-20T00:53:08.8411689Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 294.4 MB/s  0:00:00
+2026-06-20T00:53:08.8455337Z Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+2026-06-20T00:53:08.8527679Z Downloading websockets-16.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (184 kB)
+2026-06-20T00:53:08.8587214Z Downloading certifi-2026.6.17-py3-none-any.whl (133 kB)
+2026-06-20T00:53:08.8647440Z Downloading mako-1.3.12-py3-none-any.whl (78 kB)
+2026-06-20T00:53:08.8703764Z Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+2026-06-20T00:53:08.9214011Z Building wheels for collected packages: llm-relay
+2026-06-20T00:53:08.9219070Z   Building editable for llm-relay (pyproject.toml): started
+2026-06-20T00:53:08.9610088Z   Building editable for llm-relay (pyproject.toml): finished with status 'done'
+2026-06-20T00:53:08.9616478Z   Created wheel for llm-relay: filename=llm_relay-0.1.0-py3-none-any.whl size=1163 sha256=7f381956dd2797d08da11c94aaff51c32fbe98f438f681565462805d9c51122f
+2026-06-20T00:53:08.9618305Z   Stored in directory: /tmp/pip-ephem-wheel-cache-6yo8yqwf/wheels/2d/05/c2/6bf786b4d4694b21e8615814505ade6be3ac7a206649f05a29
+2026-06-20T00:53:08.9636393Z Successfully built llm-relay
+2026-06-20T00:53:09.0308130Z Installing collected packages: passlib, websockets, uvloop, typing-extensions, structlog, redis, pyyaml, python-dotenv, pygments, pluggy, packaging, MarkupSafe, iniconfig, idna, httptools, h11, greenlet, click, certifi, bcrypt, asyncpg, annotated-types, annotated-doc, uvicorn, typing-inspection, sqlalchemy, pytest, pydantic-core, Mako, httpcore, anyio, watchfiles, starlette, pytest-asyncio, pydantic, httpx, alembic, pydantic-settings, fastapi, llm-relay
+2026-06-20T00:53:14.0453172Z 
+2026-06-20T00:53:14.0476932Z Successfully installed Mako-1.3.12 MarkupSafe-3.0.3 alembic-1.18.4 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.14.0 asyncpg-0.31.0 bcrypt-5.0.0 certifi-2026.6.17 click-8.4.1 fastapi-0.137.2 greenlet-3.5.2 h11-0.16.0 httpcore-1.0.9 httptools-0.8.0 httpx-0.28.1 idna-3.18 iniconfig-2.3.0 llm-relay-0.1.0 packaging-26.2 passlib-1.7.4 pluggy-1.6.0 pydantic-2.13.4 pydantic-core-2.46.4 pydantic-settings-2.14.2 pygments-2.20.0 pytest-9.1.1 pytest-asyncio-1.4.0 python-dotenv-1.2.2 pyyaml-6.0.3 redis-8.0.0 sqlalchemy-2.0.51 starlette-1.3.1 structlog-26.1.0 typing-extensions-4.15.0 typing-inspection-0.4.2 uvicorn-0.49.0 uvloop-0.22.1 watchfiles-1.2.0 websockets-16.0
+2026-06-20T00:53:14.2062219Z ##[group]Run pip install ruff
+2026-06-20T00:53:14.2062876Z [36;1mpip install ruff[0m
+2026-06-20T00:53:14.2063169Z [36;1mruff check app/ scripts/ --ignore=E501,F401[0m
+2026-06-20T00:53:14.2098492Z shell: /usr/bin/bash -e {0}
+2026-06-20T00:53:14.2098746Z env:
+2026-06-20T00:53:14.2099016Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2099450Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T00:53:14.2099875Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100245Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100607Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T00:53:14.2100970Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T00:53:14.2101476Z ##[endgroup]
+2026-06-20T00:53:14.9947364Z Collecting ruff
+2026-06-20T00:53:15.0484598Z   Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (26 kB)
+2026-06-20T00:53:15.0633841Z Downloading ruff-0.15.18-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (11.6 MB)
+2026-06-20T00:53:15.1283311Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11.6/11.6 MB 253.6 MB/s  0:00:00
+2026-06-20T00:53:15.1889009Z Installing collected packages: ruff
+2026-06-20T00:53:15.3323731Z Successfully installed ruff-0.15.18
+2026-06-20T00:53:15.4039105Z E712 Avoid equality comparisons to `True`; use `ApiKey.is_active:` for truth checks
+2026-06-20T00:53:15.4039821Z   --> app/services/auth.py:30:45
+2026-06-20T00:53:15.4040159Z    |
+2026-06-20T00:53:15.4040431Z 28 |         select(ApiKey)
+2026-06-20T00:53:15.4040800Z 29 |         .options(selectinload(ApiKey.user))
+2026-06-20T00:53:15.4041317Z 30 |         .where(ApiKey.key_hash == key_hash, ApiKey.is_active == True)
+2026-06-20T00:53:15.4041877Z    |                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4042278Z 31 |     )
+2026-06-20T00:53:15.4042820Z 32 |     result = await session.execute(stmt)
+2026-06-20T00:53:15.4043191Z    |
+2026-06-20T00:53:15.4043488Z help: Replace with `ApiKey.is_active`
+2026-06-20T00:53:15.4043766Z 
+2026-06-20T00:53:15.4043907Z E401 [*] Multiple imports on one line
+2026-06-20T00:53:15.4044305Z  --> scripts/create_user.py:2:1
+2026-06-20T00:53:15.4044553Z   |
+2026-06-20T00:53:15.4045121Z 1 | """一次性脚本：创建测试用户并生成 API Key，打印 key 供测试使用"""
+2026-06-20T00:53:15.4045430Z 2 | import asyncio, secrets, hashlib, hmac
+2026-06-20T00:53:15.4045709Z   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4045998Z 3 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4046314Z 4 | from app.db.models import User, ApiKey
+2026-06-20T00:53:15.4046569Z   |
+2026-06-20T00:53:15.4046755Z help: Split imports
+2026-06-20T00:53:15.4046890Z 
+2026-06-20T00:53:15.4047004Z E401 [*] Multiple imports on one line
+2026-06-20T00:53:15.4047278Z  --> scripts/smoke_test.py:2:1
+2026-06-20T00:53:15.4047511Z   |
+2026-06-20T00:53:15.4047797Z 1 | """冒烟测试：覆盖数据库、认证、代理、转发全链路"""
+2026-06-20T00:53:15.4048080Z 2 | import asyncio, sys, os, hashlib, secrets, json
+2026-06-20T00:53:15.4048388Z   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4048638Z 3 | import httpx
+2026-06-20T00:53:15.4048837Z   |
+2026-06-20T00:53:15.4049015Z help: Split imports
+2026-06-20T00:53:15.4049132Z 
+2026-06-20T00:53:15.4049250Z E402 Module level import not at top of file
+2026-06-20T00:53:15.4049540Z   --> scripts/smoke_test.py:9:1
+2026-06-20T00:53:15.4049774Z    |
+2026-06-20T00:53:15.4050001Z  7 | # 添加上游模块到 path
+2026-06-20T00:53:15.4050346Z  8 | sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-06-20T00:53:15.4050780Z  9 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4051085Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4051461Z 10 | from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
+2026-06-20T00:53:15.4051805Z    |
+2026-06-20T00:53:15.4051908Z 
+2026-06-20T00:53:15.4052861Z E402 Module level import not at top of file
+2026-06-20T00:53:15.4053371Z   --> scripts/smoke_test.py:10:1
+2026-06-20T00:53:15.4053751Z    |
+2026-06-20T00:53:15.4054256Z  8 | sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+2026-06-20T00:53:15.4054893Z  9 | from app.db.base import async_session_factory
+2026-06-20T00:53:15.4055510Z 10 | from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
+2026-06-20T00:53:15.4056123Z    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4056551Z    |
+2026-06-20T00:53:15.4056694Z 
+2026-06-20T00:53:15.4056859Z F541 [*] f-string without any placeholders
+2026-06-20T00:53:15.4057274Z   --> scripts/smoke_test.py:85:11
+2026-06-20T00:53:15.4057638Z    |
+2026-06-20T00:53:15.4057910Z 83 |     body = resp.json()
+2026-06-20T00:53:15.4058769Z 84 |     assert "upstream_error" in str(body)
+2026-06-20T00:53:15.4060011Z 85 |     print(f"[PASS] POST /v1/chat/completions — 上游不可达返回 502")
+2026-06-20T00:53:15.4060576Z    |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4061032Z    |
+2026-06-20T00:53:15.4061326Z help: Remove extraneous `f` prefix
+2026-06-20T00:53:15.4061593Z 
+2026-06-20T00:53:15.4061718Z F541 [*] f-string without any placeholders
+2026-06-20T00:53:15.4062004Z    --> scripts/smoke_test.py:107:15
+2026-06-20T00:53:15.4062252Z     |
+2026-06-20T00:53:15.4062714Z 105 |         text = body.decode()
+2026-06-20T00:53:15.4063358Z 106 |         assert "error" in text.lower(), f"SSE 应含 error: {text[:200]}"
+2026-06-20T00:53:15.4064034Z 107 |         print(f"[PASS] POST /v1/chat/completions (stream) — 上游错误正确编码为 SSE")
+2026-06-20T00:53:15.4064445Z     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-06-20T00:53:15.4064753Z     |
+2026-06-20T00:53:15.4065064Z help: Remove extraneous `f` prefix
+2026-06-20T00:53:15.4065238Z 
+2026-06-20T00:53:15.4065325Z Found 7 errors.
+2026-06-20T00:53:15.4065760Z [*] 4 fixable with the `--fix` option (1 hidden fix can be enabled with the `--unsafe-fixes` option).
+2026-06-20T00:53:15.4076633Z ##[error]Process completed with exit code 1.
+2026-06-20T00:53:15.4212267Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T00:53:15.4213612Z Post job cleanup.
+2026-06-20T00:53:15.5189189Z [command]/usr/bin/git version
+2026-06-20T00:53:15.5233704Z git version 2.54.0
+2026-06-20T00:53:15.5291686Z Temporarily overriding HOME='/home/runner/work/_temp/0788e33d-0819-426f-b661-fd9930b7f0e9' before making global git config changes
+2026-06-20T00:53:15.5301753Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-20T00:53:15.5303095Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/APILLM/APILLM
+2026-06-20T00:53:15.5335476Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-20T00:53:15.5375732Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-20T00:53:15.5668341Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-20T00:53:15.5703020Z http.https://github.com/.extraheader
+2026-06-20T00:53:15.5717454Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-06-20T00:53:15.5755488Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-20T00:53:15.6173321Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-20T00:53:15.6337949Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-20T00:53:15.7149394Z Print service container logs: 246b87e6a27a4aa48e1f1ee8fd6dd689_postgres16_469f95
+2026-06-20T00:53:15.7154555Z ##[command]/usr/bin/docker logs --details 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:53:15.7303891Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-20T00:53:15.7304696Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-20T00:53:15.7305716Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-20T00:53:15.7306660Z  2026-06-20 00:52:46.846 UTC [1] LOG:  starting PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-06-20T00:53:15.7307672Z  2026-06-20 00:52:46.846 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-20T00:53:15.7308189Z  2026-06-20 00:52:46.846 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-20T00:53:15.7308712Z  2026-06-20 00:52:46.847 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-20T00:53:15.7309284Z  2026-06-20 00:52:46.854 UTC [64] LOG:  database system was shut down at 2026-06-20 00:52:46 UTC
+2026-06-20T00:53:15.7309774Z  2026-06-20 00:52:46.860 UTC [1] LOG:  database system is ready to accept connections
+2026-06-20T00:53:15.7310207Z  2026-06-20 00:52:55.483 UTC [75] FATAL:  role "root" does not exist
+2026-06-20T00:53:15.7310589Z  2026-06-20 00:53:05.580 UTC [83] FATAL:  role "root" does not exist
+2026-06-20T00:53:15.7310947Z  2026-06-20 00:53:15.687 UTC [90] FATAL:  role "root" does not exist
+2026-06-20T00:53:15.7311649Z  This user must also own the server process.
+2026-06-20T00:53:15.7313100Z  
+2026-06-20T00:53:15.7313797Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-20T00:53:15.7314666Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-20T00:53:15.7315533Z  The default text search configuration will be set to "english".
+2026-06-20T00:53:15.7316188Z  
+2026-06-20T00:53:15.7316622Z  Data page checksums are disabled.
+2026-06-20T00:53:15.7317153Z  
+2026-06-20T00:53:15.7317728Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-20T00:53:15.7318448Z  creating subdirectories ... ok
+2026-06-20T00:53:15.7319075Z  selecting dynamic shared memory implementation ... posix
+2026-06-20T00:53:15.7319756Z  selecting default max_connections ... 100
+2026-06-20T00:53:15.7320346Z  selecting default shared_buffers ... 128MB
+2026-06-20T00:53:15.7320930Z  selecting default time zone ... Etc/UTC
+2026-06-20T00:53:15.7321503Z  creating configuration files ... ok
+2026-06-20T00:53:15.7322125Z  running bootstrap script ... ok
+2026-06-20T00:53:15.7322930Z  performing post-bootstrap initialization ... ok
+2026-06-20T00:53:15.7323562Z  syncing data to disk ... ok
+2026-06-20T00:53:15.7324067Z  
+2026-06-20T00:53:15.7324479Z  
+2026-06-20T00:53:15.7324987Z  Success. You can now start the database server using:
+2026-06-20T00:53:15.7325740Z  
+2026-06-20T00:53:15.7327255Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-20T00:53:15.7327980Z  
+2026-06-20T00:53:15.7329093Z  waiting for server to start....2026-06-20 00:52:46.437 UTC [48] LOG:  starting PostgreSQL 16.14 (Debian 16.14-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-06-20T00:53:15.7330725Z  2026-06-20 00:52:46.438 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-20T00:53:15.7331602Z  2026-06-20 00:52:46.445 UTC [51] LOG:  database system was shut down at 2026-06-20 00:52:46 UTC
+2026-06-20T00:53:15.7332714Z  2026-06-20 00:52:46.457 UTC [48] LOG:  database system is ready to accept connections
+2026-06-20T00:53:15.7333321Z   done
+2026-06-20T00:53:15.7333597Z  server started
+2026-06-20T00:53:15.7333896Z  CREATE DATABASE
+2026-06-20T00:53:15.7334182Z  
+2026-06-20T00:53:15.7334433Z  
+2026-06-20T00:53:15.7335216Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-20T00:53:15.7335819Z  
+2026-06-20T00:53:15.7336206Z  2026-06-20 00:52:46.713 UTC [48] LOG:  received fast shutdown request
+2026-06-20T00:53:15.7337007Z  waiting for server to shut down....2026-06-20 00:52:46.714 UTC [48] LOG:  aborting any active transactions
+2026-06-20T00:53:15.7337689Z  2026-06-20 00:52:46.722 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-20T00:53:15.7338204Z  2026-06-20 00:52:46.724 UTC [49] LOG:  shutting down
+2026-06-20T00:53:15.7338589Z  2026-06-20 00:52:46.725 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-20T00:53:15.7339626Z  2026-06-20 00:52:46.774 UTC [49] LOG:  checkpoint complete: wrote 926 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.046 s, sync=0.002 s, total=0.050 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4273 kB, estimate=4273 kB; lsn=0/191F0E8, redo lsn=0/191F0E8
+2026-06-20T00:53:15.7340782Z  2026-06-20 00:52:46.784 UTC [48] LOG:  database system is shut down
+2026-06-20T00:53:15.7341102Z   done
+2026-06-20T00:53:15.7341293Z  server stopped
+2026-06-20T00:53:15.7341489Z  
+2026-06-20T00:53:15.7341727Z  PostgreSQL init process complete; ready for start up.
+2026-06-20T00:53:15.7342021Z  
+2026-06-20T00:53:15.7348415Z Stop and remove container: 246b87e6a27a4aa48e1f1ee8fd6dd689_postgres16_469f95
+2026-06-20T00:53:15.7353683Z ##[command]/usr/bin/docker rm --force 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:53:16.3241911Z 667ee0303c31bf2e0f148c1ec484d4a0079f9590d8a66af80c1f60f90cc6b8b6
+2026-06-20T00:53:16.3269671Z Print service container logs: febd694c3cad4972b8b0de7e06a5bf20_redis7alpine_56bc76
+2026-06-20T00:53:16.3270978Z ##[command]/usr/bin/docker logs --details 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:53:16.3409161Z  1:C 20 Jun 2026 00:52:47.022 # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+2026-06-20T00:53:16.3413216Z  1:C 20 Jun 2026 00:52:47.022 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+2026-06-20T00:53:16.3414395Z  1:C 20 Jun 2026 00:52:47.022 * Redis version=7.4.9, bits=64, commit=00000000, modified=0, pid=1, just started
+2026-06-20T00:53:16.3415869Z  1:C 20 Jun 2026 00:52:47.022 # Warning: no config file specified, using the default config. In order to specify a config file use redis-server /path/to/redis.conf
+2026-06-20T00:53:16.3417079Z  1:M 20 Jun 2026 00:52:47.022 * monotonic clock: POSIX clock_gettime
+2026-06-20T00:53:16.3417774Z  1:M 20 Jun 2026 00:52:47.023 * Running mode=standalone, port=6379.
+2026-06-20T00:53:16.3418437Z  1:M 20 Jun 2026 00:52:47.024 * Server initialized
+2026-06-20T00:53:16.3421631Z  1:M 20 Jun 2026 00:52:47.024 * Ready to accept connections tcp
+2026-06-20T00:53:16.3427717Z Stop and remove container: febd694c3cad4972b8b0de7e06a5bf20_redis7alpine_56bc76
+2026-06-20T00:53:16.3428593Z ##[command]/usr/bin/docker rm --force 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:53:16.4609482Z 327d4aedd9e076b09e1fc7acb372bf4a43bf44bcc6b5415a8b5f0e5ec80bc8a0
+2026-06-20T00:53:16.4657814Z Remove container network: github_network_31a5c70f6e7840aeaeb590b64085df9c
+2026-06-20T00:53:16.4664849Z ##[command]/usr/bin/docker network rm github_network_31a5c70f6e7840aeaeb590b64085df9c
+2026-06-20T00:53:16.5467657Z github_network_31a5c70f6e7840aeaeb590b64085df9c
+2026-06-20T00:53:16.5536590Z Cleaning up orphan processes
+2026-06-20T00:53:16.5844807Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/setup-python@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

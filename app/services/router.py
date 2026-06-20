@@ -26,23 +26,44 @@ def select_upstream(upstreams: list[Upstream]) -> Upstream:
     return max(upstreams, key=lambda u: u.priority)
 
 
-async def select_upstream_by_model(upstreams: list[Upstream], model: str) -> Upstream:
+async def select_upstream_by_model(
+    upstreams: list[Upstream],
+    model: str,
+    manual_prices: dict[str, dict[str, float]] | None = None,
+) -> Upstream:
     """Select the cheapest enabled upstream for a given model.
 
-    Reads price cache from Redis. Falls back to priority-based selection
-    if no price data is available for the model.
+    manual_prices: {model_id: {"prompt": float, "completion": float}} from ModelConfig table.
+    Manual prices override automatic Redis prices.
     """
-    ranked = await rank_upstreams_by_model(upstreams, model)
+    ranked = await rank_upstreams_by_model(upstreams, model, manual_prices)
     return ranked[0]
 
 
-async def rank_upstreams_by_model(upstreams: list[Upstream], model: str) -> list[Upstream]:
+async def rank_upstreams_by_model(
+    upstreams: list[Upstream],
+    model: str,
+    manual_prices: dict[str, dict[str, float]] | None = None,
+) -> list[Upstream]:
     """Sort upstreams by price (cheapest first), then priority (highest first) as tiebreaker.
 
-    Upstreams without price data are placed after priced ones, sorted by priority.
+    Priority of price sources: manual_prices > Redis cache > no data (priority fallback).
     """
     if not upstreams:
         raise NoAvailableUpstreamError()
+
+    # Check manual price for this model (applies equally to all upstreams)
+    manual_cost: float | None = None
+    if manual_prices and model in manual_prices:
+        mp = manual_prices[model]
+        if mp.get("prompt") or mp.get("completion"):
+            manual_cost = (mp.get("prompt", 0) or 0) + (mp.get("completion", 0) or 0)
+
+    if manual_cost is not None and manual_cost > 0:
+        # Manual price applies to all upstreams equally; sort by priority
+        logger.debug("route_manual_price", model=model, price=round(manual_cost, 6))
+        ranked = sorted(upstreams, key=lambda u: -u.priority)
+        return ranked
 
     keys = [PRICE_KEY_FMT.format(u.id, model) for u in upstreams]
     try:
@@ -61,9 +82,7 @@ async def rank_upstreams_by_model(upstreams: list[Upstream], model: str) -> list
         else:
             unpriced.append(upstream)
 
-    # Sort by cost ascending, then priority descending as tiebreaker
     priced.sort(key=lambda x: (x[1], -x[0].priority))
-    # Unpriced sorted by priority descending
     unpriced.sort(key=lambda u: -u.priority)
 
     ranked = [u for u, _ in priced] + unpriced

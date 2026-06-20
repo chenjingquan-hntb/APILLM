@@ -1,0 +1,32 @@
+﻿2026-06-20T01:03:37.1962702Z ##[group]Run python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+2026-06-20T01:03:37.1963289Z [36;1mpython -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &[0m
+2026-06-20T01:03:37.1963701Z [36;1m# Wait for server to be ready (max 30s)[0m
+2026-06-20T01:03:37.1964003Z [36;1mfor i in $(seq 1 30); do[0m
+2026-06-20T01:03:37.1964372Z [36;1m  if curl -s http://127.0.0.1:8000/health > /dev/null 2>&1; then[0m
+2026-06-20T01:03:37.1964759Z [36;1m    echo "Server ready after ${i}s"[0m
+2026-06-20T01:03:37.1965041Z [36;1m    break[0m
+2026-06-20T01:03:37.1965253Z [36;1m  fi[0m
+2026-06-20T01:03:37.1965667Z [36;1m  sleep 1[0m
+2026-06-20T01:03:37.1965871Z [36;1mdone[0m
+2026-06-20T01:03:37.1999868Z shell: /usr/bin/bash -e {0}
+2026-06-20T01:03:37.2000126Z env:
+2026-06-20T01:03:37.2000683Z   DATABASE_URL: ***localhost:5432/relay_test
+2026-06-20T01:03:37.2000999Z   REDIS_URL: redis://localhost:6379/0
+2026-06-20T01:03:37.2001342Z   SECRET_KEY: ci-test-secret-key-not-for-production
+2026-06-20T01:03:37.2001833Z   DEBUG: false
+2026-06-20T01:03:37.2002114Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:37.2002535Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T01:03:37.2002953Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:37.2003326Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:37.2003714Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:37.2004097Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T01:03:37.2004427Z ##[endgroup]
+2026-06-20T01:03:38.1163355Z INFO:     Started server process [2904]
+2026-06-20T01:03:38.1164355Z INFO:     Waiting for application startup.
+2026-06-20T01:03:38.1197056Z {"host": "localhost:6379", "event": "redis_connected", "level": "info", "timestamp": "2026-06-20T01:03:38.119507Z"}
+2026-06-20T01:03:38.1198298Z {"interval": 300, "event": "price_loop_started", "level": "info", "timestamp": "2026-06-20T01:03:38.119647Z"}
+2026-06-20T01:03:38.1216513Z {"interval": 30, "event": "health_loop_started", "level": "info", "timestamp": "2026-06-20T01:03:38.121519Z"}
+2026-06-20T01:03:38.1225847Z INFO:     Application startup complete.
+2026-06-20T01:03:38.1232429Z INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+2026-06-20T01:03:38.2359240Z INFO:     127.0.0.1:60854 - "GET /health HTTP/1.1" 200 OK
+2026-06-20T01:03:38.2382330Z Server ready after 2s

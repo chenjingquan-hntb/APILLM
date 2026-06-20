@@ -1,0 +1,15 @@
+﻿2026-06-20T00:53:15.4212254Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T00:53:15.4213608Z Post job cleanup.
+2026-06-20T00:53:15.5189116Z [command]/usr/bin/git version
+2026-06-20T00:53:15.5233683Z git version 2.54.0
+2026-06-20T00:53:15.5291668Z Temporarily overriding HOME='/home/runner/work/_temp/0788e33d-0819-426f-b661-fd9930b7f0e9' before making global git config changes
+2026-06-20T00:53:15.5301737Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-20T00:53:15.5303085Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/APILLM/APILLM
+2026-06-20T00:53:15.5335463Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-20T00:53:15.5375636Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-20T00:53:15.5668303Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-20T00:53:15.5703001Z http.https://github.com/.extraheader
+2026-06-20T00:53:15.5717441Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-06-20T00:53:15.5755477Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-20T00:53:15.6173279Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-20T00:53:15.6337872Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url

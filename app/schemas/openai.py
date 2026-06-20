@@ -88,10 +88,14 @@ class ChatCompletionChunk(BaseModel):
 class ModelCard(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str
+    id: str = Field(max_length=128)
     object: str = "model"
     created: int = 0
     owned_by: str = "relay"
+    # Extended fields for frontend
+    upstream_count: int = 0
+    lowest_price: float | None = None
+    available: bool = True
 
 
 class ModelList(BaseModel):

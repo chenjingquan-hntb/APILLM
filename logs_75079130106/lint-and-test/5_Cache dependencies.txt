@@ -1,0 +1,26 @@
+﻿2026-06-20T01:03:20.7742825Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-06-20T01:03:20.7744128Z ##[group]Run actions/cache@v4
+2026-06-20T01:03:20.7744383Z with:
+2026-06-20T01:03:20.7744584Z   path: ~/.cache/pip
+2026-06-20T01:03:20.7744980Z   key: Linux-pip-3cfd6a4963cce42edb3c5c7799e1f9f76bfdcdf26cbcfd28cf2811a85ecc1b7e
+2026-06-20T01:03:20.7745426Z   restore-keys: Linux-pip-
+
+2026-06-20T01:03:20.7745697Z   enableCrossOsArchive: false
+2026-06-20T01:03:20.7745951Z   fail-on-cache-miss: false
+2026-06-20T01:03:20.7746179Z   lookup-only: false
+2026-06-20T01:03:20.7746395Z   save-always: false
+2026-06-20T01:03:20.7746595Z env:
+2026-06-20T01:03:20.7747171Z   DATABASE_URL: ***localhost:5432/relay_test
+2026-06-20T01:03:20.7747489Z   REDIS_URL: redis://localhost:6379/0
+2026-06-20T01:03:20.7747871Z   SECRET_KEY: ci-test-secret-key-not-for-production
+2026-06-20T01:03:20.7748182Z   DEBUG: false
+2026-06-20T01:03:20.7748453Z   pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:20.7748894Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+2026-06-20T01:03:20.7749320Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:20.7749688Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:20.7750066Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+2026-06-20T01:03:20.7750447Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+2026-06-20T01:03:20.7750774Z ##[endgroup]
+2026-06-20T01:03:20.8952789Z (node:2673) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-06-20T01:03:20.8954274Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-06-20T01:03:21.1113775Z Cache not found for input keys: Linux-pip-3cfd6a4963cce42edb3c5c7799e1f9f76bfdcdf26cbcfd28cf2811a85ecc1b7e, Linux-pip-

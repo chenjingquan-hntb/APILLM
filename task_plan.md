@@ -25,6 +25,18 @@
 - [x] 故障切换：请求失败自动重试下一个上游
 - [x] 冒烟测试 5/5 通过
 
+## Phase 2.5: 前端展示 Dashboard — ✅ 完成
+
+- [x] Web/ 纯静态前端（index.html + css/style.css + js/api.js + js/app.js）
+- [x] MiMo 风格 Hero 文字矩阵动画（4 层 "A P I L L M / R E L A Y / P R O X Y" 视差滚动）
+- [x] 系统健康面板（Redis/DB 状态灯 + 30s 自动轮询）
+- [x] 模型列表展示（调用 GET /v1/models 动态加载）
+- [x] API Playground（Chat Completions 在线测试，支持流式 SSE / 非流式切换）
+- [x] Quick Start 代码示例（Python SDK + curl，一键复制）
+- [x] 后端 CORS 中间件 + StaticFiles 挂载 `/`
+- [x] Playwright 自动化验证（0 JS 错误，全部元素可见）
+- [x] design-system/ 设计文档持久化
+
 ## Phase 3: 商业化 — ⏳ 待实现
 
 - [ ] 用户余额扣费（上游实际消耗 × (1 + markup_rate)）

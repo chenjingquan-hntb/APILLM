@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APILLM Relay — 大模型智能中转</title>
+  <meta name="description" content="APILLM — 大模型中转站的中转站。智能路由、价格优先、多协议支持。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚡</text></svg>">
+</head>
+<body>
+
+  <!-- ======== Hero 文字矩阵 ======== -->
+  <section class="hero-matrix" aria-hidden="true">
+    <div class="hero-matrix-layer">A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M</div>
+    <div class="hero-matrix-layer">R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y &nbsp;&nbsp; R E L A Y</div>
+    <div class="hero-matrix-layer">P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y &nbsp;&nbsp; P R O X Y</div>
+    <div class="hero-matrix-layer">A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M &nbsp; A P I L L M</div>
+
+    <div class="hero-title">
+      <h1>APILLM</h1>
+      <p>大模型智能中转 · 永远走最便宜的路线</p>
+    </div>
+  </section>
+
+  <!-- ======== Navbar ======== -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="#" class="nav-logo">APILLM</a>
+      <div class="nav-actions">
+        <input type="text" id="base-url-input" class="input input-sm" placeholder="http://127.0.0.1:8000" style="width:220px;" aria-label="API 地址">
+        <input type="password" id="api-key-input" class="input input-sm" placeholder="sk-relay-..." style="width:280px;" aria-label="API Key">
+        <button id="api-key-apply" class="btn btn-secondary btn-sm" style="padding:0.375rem 0.75rem;font-size:0.75rem;">应用</button>
+        <span id="key-status"></span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ======== 主内容 ======== -->
+  <main class="container">
+
+    <!-- 第一行：健康状态 + 模型列表 -->
+    <div class="grid-2col section">
+
+      <!-- 健康状态 -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">系统健康</h2>
+          <button id="health-refresh" class="btn-icon" title="刷新" aria-label="刷新健康状态">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          </button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.625rem;">
+          <div id="health-status" style="font-size:0.9375rem;font-weight:500;">加载中...</div>
+          <div id="health-redis" style="font-size:0.8125rem;color:var(--text-secondary);">Redis: -</div>
+          <div id="health-db" style="font-size:0.8125rem;color:var(--text-secondary);">DB: -</div>
+          <div id="health-upstreams" style="font-size:0.8125rem;color:var(--text-secondary);">上游: -</div>
+          <div id="health-time" style="font-size:0.6875rem;color:var(--text-muted);margin-top:0.25rem;"></div>
+        </div>
+      </div>
+
+      <!-- 模型列表 -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">可用模型 <span id="model-count" style="color:var(--text-secondary);font-weight:400;">0</span></h2>
+          <button id="model-load" class="btn btn-secondary btn-sm" style="padding:0.375rem 0.75rem;font-size:0.75rem;">刷新模型</button>
+        </div>
+        <div id="model-grid" class="model-grid">
+          <div class="message system">请设置 API Key 后加载模型</div>
+        </div>
+        <div id="model-status" style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.5rem;"></div>
+      </div>
+    </div>
+
+    <!-- 第二行：API Playground -->
+    <div class="card section" style="margin-top:0;">
+      <div class="card-header">
+        <h2 class="card-title">API Playground</h2>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <select id="pg-model" class="input input-sm" style="width:auto;min-width:140px;" aria-label="模型选择">
+            <option value="">请先加载模型</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;color:var(--text-secondary);cursor:pointer;">
+            <input type="checkbox" id="pg-stream" checked> 流式
+          </label>
+          <button id="pg-clear" class="btn btn-secondary btn-sm" style="padding:0.375rem 0.75rem;font-size:0.75rem;">清空</button>
+        </div>
+      </div>
+
+      <div class="playground-chat">
+        <div id="pg-messages" class="playground-messages" role="log" aria-label="对话消息">
+          <div class="message system">在下方输入消息，测试 API 中转功能</div>
+        </div>
+
+        <div class="playground-input-row">
+          <input type="text" id="pg-input" class="input" placeholder="输入消息，按 Enter 发送..." aria-label="消息输入">
+          <button id="pg-send" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            发送
+          </button>
+        </div>
+        <div id="pg-status" style="font-size:0.75rem;color:var(--text-secondary);"></div>
+      </div>
+    </div>
+
+    <!-- 第三行：Quick Start -->
+    <div class="section" style="padding-top:1.5rem;">
+      <h2 class="section-title">快速开始</h2>
+      <div class="code-block">
+        <button class="btn-icon copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)" title="复制" aria-label="复制代码">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+<pre># 使用 OpenAI SDK 直接调用
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="http://127.0.0.1:8000/v1",
+    api_key="sk-relay-YOUR_API_KEY",
+)
+
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello, APILLM!"}],
+)
+print(response.choices[0].message.content)</pre>
+      </div>
+
+      <div class="code-block" style="margin-top:1rem;">
+        <button class="btn-icon copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent)" title="复制" aria-label="复制代码">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+<pre># 或者直接用 curl
+curl http://127.0.0.1:8000/v1/chat/completions \
+  -H "Authorization: Bearer sk-relay-YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"Hello!"}]}'</pre>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ======== Footer ======== -->
+  <footer style="border-top:1px solid var(--border);margin-top:3rem;padding:2rem 1.5rem;text-align:center;">
+    <div class="container" style="display:flex;flex-direction:column;align-items:center;gap:0.5rem;">
+      <div style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1rem;color:var(--text-primary);">APILLM</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);">大模型中转站的中转站</div>
+      <div style="display:flex;gap:1.5rem;margin-top:0.5rem;">
+        <a href="/docs" target="_blank" style="color:var(--text-secondary);text-decoration:none;font-size:0.8125rem;transition:color 200ms;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">API 文档</a>
+        <a href="/redoc" target="_blank" style="color:var(--text-secondary);text-decoration:none;font-size:0.8125rem;transition:color 200ms;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">ReDoc</a>
+        <a href="https://github.com" target="_blank" rel="noopener" style="color:var(--text-secondary);text-decoration:none;font-size:0.8125rem;transition:color 200ms;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">GitHub</a>
+      </div>
+      <div style="font-size:0.6875rem;color:var(--text-muted);margin-top:0.75rem;">&copy; 2026 APILLM Relay. All Rights Reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

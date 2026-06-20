@@ -1,6 +1,8 @@
 import hashlib
 import hmac
 from datetime import datetime, timedelta, UTC
+
+import bcrypt as _bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -41,3 +43,16 @@ async def authenticate(raw_key: str, session: AsyncSession) -> User:
         await session.commit()
 
     return api_key.user
+
+
+# --- Password hashing using native bcrypt ---
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt with cost factor 12."""
+    return _bcrypt.hashpw(password.encode(), _bcrypt.gensalt(rounds=12)).decode()
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against a bcrypt hash."""
+    return _bcrypt.checkpw(password.encode(), hashed.encode())

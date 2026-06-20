@@ -1,0 +1,496 @@
+/* ================================================================
+   APILLM Frontend — 样式表
+   暗色极简 + 功能型 Dashboard
+   ================================================================ */
+
+/* --- CSS 变量 --- */
+:root {
+  --bg-deep:     #080808;
+  --bg-card:     #111111;
+  --bg-card-hover: #181818;
+  --bg-input:    #0A0A0A;
+  --border:      rgba(255,255,255,0.06);
+  --border-visible: rgba(255,255,255,0.12);
+  --text-primary:   #FAFAFA;
+  --text-secondary: #888888;
+  --text-muted:     #555555;
+  --accent-blue:    #3B82F6;
+  --accent-blue-hover: #2563EB;
+  --accent-green:   #22C55E;
+  --accent-red:     #EF4444;
+  --accent-yellow:  #F59E0B;
+  --code-bg:        #0D1117;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Hero 文字矩阵动画 --- */
+.hero-matrix {
+  position: relative;
+  height: 40vh;
+  min-height: 260px;
+  max-height: 400px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-matrix-layer {
+  position: absolute;
+  display: flex;
+  gap: 1.5rem;
+  white-space: nowrap;
+  will-change: transform;
+  animation: matrixScroll var(--speed, 80s) linear infinite;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  line-height: 1;
+}
+
+@keyframes matrixScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.hero-matrix-layer:nth-child(1) { top: 5%;  --speed: 160s; opacity: 0.05; font-size: 0.75rem; color: var(--text-secondary); }
+.hero-matrix-layer:nth-child(2) { top: 20%; --speed: 120s; opacity: 0.08; font-size: 1rem;    color: var(--text-secondary); }
+.hero-matrix-layer:nth-child(3) { top: 40%; --speed: 90s;  opacity: 0.12; font-size: 1.5rem;  color: var(--text-primary); }
+.hero-matrix-layer:nth-child(4) { top: 60%; --speed: 60s;  opacity: 0.18; font-size: 2.25rem; color: var(--text-primary); }
+
+.hero-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.hero-title h1 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.hero-title p {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  color: var(--text-secondary);
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+/* --- 导航栏 --- */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8,8,8,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+}
+
+.navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.nav-logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* --- 通用布局 --- */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.section {
+  padding: 3rem 0;
+}
+
+.section-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+/* --- 卡片 --- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: border-color 200ms ease, background 200ms ease;
+}
+
+.card:hover {
+  border-color: var(--border-visible);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+/* --- 状态指示灯 --- */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.status-dot.ok     { background: var(--accent-green);  box-shadow: 0 0 6px var(--accent-green); }
+.status-dot.error  { background: var(--accent-red);    box-shadow: 0 0 6px var(--accent-red); }
+.status-dot.warn   { background: var(--accent-yellow); box-shadow: 0 0 6px var(--accent-yellow); }
+
+/* --- 输入框 --- */
+.input {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 200ms ease;
+  width: 100%;
+}
+
+.input:focus {
+  border-color: var(--accent-blue);
+}
+
+.input-sm {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+}
+
+/* --- 按钮 --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent-blue);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-blue-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-visible);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.25);
+}
+
+.btn-icon {
+  padding: 0.375rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.btn-icon:hover {
+  border-color: var(--border-visible);
+  color: var(--text-primary);
+}
+
+/* --- 代码块 --- */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  overflow-x: auto;
+  color: #E6EDF3;
+  position: relative;
+}
+
+.code-block .copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+/* --- 模型列表 --- */
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.model-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  transition: border-color 200ms ease;
+}
+
+.model-tag:hover {
+    border-color: var(--accent-blue);
+}
+
+.model-tag-name {
+    font-weight: 500;
+}
+
+.model-tag-price {
+    font-size: 0.6875rem;
+    color: var(--accent-green);
+    margin-left: auto;
+}
+
+.model-tag-count {
+    font-size: 0.625rem;
+    color: var(--text-muted);
+    background: var(--bg-input);
+    padding: 0.125rem 0.375rem;
+    border-radius: 4px;
+}
+
+.model-tag.model-unavailable {
+    opacity: 0.45;
+    border-style: dashed;
+}
+
+.model-tag.model-unavailable .model-tag-price {
+    color: var(--accent-red);
+}
+
+/* --- Spinner 动画 --- */
+.spinning svg {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* --- 双栏布局 --- */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* --- Playground --- */
+.playground-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.playground-messages {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.message {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 85%;
+}
+
+.message.user {
+  background: var(--accent-blue);
+  color: white;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.message.assistant {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.message.system {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-secondary);
+  align-self: center;
+  font-size: 0.75rem;
+  text-align: center;
+  max-width: 100%;
+}
+
+.playground-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.playground-input-row .input {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+}
+
+/* --- 响应式 --- */
+@media (max-width: 768px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-matrix {
+    height: 30vh;
+    min-height: 180px;
+  }
+
+  .navbar {
+    padding: 0 1rem;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .section {
+    padding: 2rem 0;
+  }
+}
+
+/* --- 滚动条 --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* --- reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-matrix-layer {
+    animation: none;
+  }
+
+  *, *::before, *::after {
+    transition-duration: 0s !important;
+  }
+}
