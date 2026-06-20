@@ -1,13 +1,19 @@
 """冒烟测试：覆盖数据库、认证、代理、转发全链路"""
-import asyncio, sys, os, hashlib, secrets, json
+import asyncio
+import hashlib
+import json
+import os
+import secrets
+import sys
+
 import httpx
 
 BASE = "http://127.0.0.1:8000"
 
-# 添加上游模块到 path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from app.db.base import async_session_factory
-from app.db.models import User, ApiKey, Upstream, UpstreamProtocol
+# 添加上游模块到 path (必须在 app 模块导入之前)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # noqa: E402
+from app.db.base import async_session_factory  # noqa: E402
+from app.db.models import User, ApiKey, Upstream, UpstreamProtocol  # noqa: E402
 
 
 async def setup() -> str:
@@ -82,7 +88,7 @@ async def test_chat_upstream_error(client: httpx.AsyncClient, api_key: str):
     assert resp.status_code == 502, f"expected 502 got {resp.status_code}"
     body = resp.json()
     assert "upstream_error" in str(body)
-    print(f"[PASS] POST /v1/chat/completions — 上游不可达返回 502")
+    print("[PASS] POST /v1/chat/completions — 上游不可达返回 502")
 
 
 async def test_chat_stream_upstream_error(client: httpx.AsyncClient, api_key: str):
@@ -104,7 +110,7 @@ async def test_chat_stream_upstream_error(client: httpx.AsyncClient, api_key: st
                 body += line.encode()
         text = body.decode()
         assert "error" in text.lower(), f"SSE 应含 error: {text[:200]}"
-        print(f"[PASS] POST /v1/chat/completions (stream) — 上游错误正确编码为 SSE")
+        print("[PASS] POST /v1/chat/completions (stream) — 上游错误正确编码为 SSE")
 
 
 async def main():

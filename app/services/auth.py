@@ -27,7 +27,7 @@ async def authenticate(raw_key: str, session: AsyncSession) -> User:
     stmt = (
         select(ApiKey)
         .options(selectinload(ApiKey.user))
-        .where(ApiKey.key_hash == key_hash, ApiKey.is_active == True)
+        .where(ApiKey.key_hash == key_hash, ApiKey.is_active.is_(True))
     )
     result = await session.execute(stmt)
     api_key = result.scalar_one_or_none()

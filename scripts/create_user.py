@@ -1,8 +1,12 @@
 """一次性脚本：创建测试用户并生成 API Key，打印 key 供测试使用"""
-import asyncio, secrets, hashlib, hmac
-from app.db.base import async_session_factory
-from app.db.models import User, ApiKey
+import asyncio
+import hashlib
+import hmac
+import secrets
+
 from app.core.config import settings
+from app.db.base import async_session_factory
+from app.db.models import ApiKey, User
 
 async def main():
     raw_key = secrets.token_hex(24)
