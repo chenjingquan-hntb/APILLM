@@ -1,21 +1,17 @@
 import asyncio
-import bcrypt
 from app.db.base import async_session_factory
-from app.db.models import User
-from sqlalchemy import select
+from app.db.models import Upstream
+from sqlalchemy import select, update
 
 async def main():
     async with async_session_factory() as s:
-        r = await s.execute(select(User).where(User.username == 'admin'))
-        u = r.scalar_one_or_none()
-        if u and u.password_hash:
-            h = u.password_hash.encode() if isinstance(u.password_hash, str) else u.password_hash
-            print(f"hash bytes: {h}")
-            print(f"hash len: {len(h)}")
-            print(f"hash repr: {repr(h)}")
-            ok = bcrypt.checkpw(b"admin123", h)
-            print(f"verify: {ok}")
-        else:
-            print("no password hash")
+        r = await s.execute(select(Upstream))
+        ups = r.scalars().all()
+        for u in ups:
+            if not u.is_enabled:
+                print(f"启用上游: {u.name} (id={u.id})")
+                u.is_enabled = True
+        await s.commit()
+        print("完成")
 
 asyncio.run(main())

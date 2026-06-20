@@ -314,12 +314,14 @@
       <div class="form-group"><label>API Key</label><input id="uf-key" class="input" type="password"></div>
       <div class="form-group"><label>协议</label><select id="uf-proto" class="input"><option value="openai">openai</option><option value="anthropic">anthropic</option></select></div>
       <div class="form-group"><label>加价率</label><input id="uf-markup" class="input" type="number" step="0.01" value="0.2"></div>
+      <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem"><input id="uf-enabled" type="checkbox" checked style="width:auto"> 启用</label></div>
       <button class="btn primary" id="uf-submit" style="width:100%">保存</button>
     `;
     openModal(title, body, async () => {
       const data = {
         name: $('#uf-name').value, base_url: $('#uf-url').value, api_key: $('#uf-key').value,
         protocol: $('#uf-proto').value, markup_rate: parseFloat($('#uf-markup').value) || 0.2,
+        is_enabled: $('#uf-enabled').checked,
       };
       if (id) await APILLM.adminUpdateUpstream(id, data);
       else await APILLM.adminCreateUpstream(data);
