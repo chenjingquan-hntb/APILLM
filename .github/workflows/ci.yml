@@ -180,7 +180,7 @@ jobs:
 
       - name: Create admin token for health check
         run: |
-          echo "ADMIN_TOKEN=$(python scripts/ci_helpers.py)" >> $GITHUB_ENV
+          python scripts/ci_helpers.py 2>/dev/null | grep "^ADMIN_TOKEN=" >> $GITHUB_ENV
 
       - name: Comprehensive health check
         run: |

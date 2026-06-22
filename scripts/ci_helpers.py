@@ -1,6 +1,14 @@
 """CI helper — create test admin user and output JWT token for healthcheck."""
 import asyncio
-import sys
+import logging
+import os
+
+# Suppress all non-essential logging (SQLAlchemy echo, structlog, etc.)
+os.environ["DEBUG"] = "false"
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+logging.getLogger("app").setLevel(logging.WARNING)
+
 from app.db.base import async_session_factory
 from app.db.models import User
 from app.services.auth import hash_password
@@ -19,7 +27,6 @@ async def main():
         uid = u.id
 
     token = create_access_token(user_id=uid, role="admin")
-    # Output in key=value format for sourcing
     print(f"ADMIN_TOKEN={token}")
 
 
