@@ -6,9 +6,7 @@ from app.core.config import settings
 from app.services.jwt import create_access_token
 
 
-# ============================================================
-# Fixtures
-# ============================================================
+pytestmark = pytest.mark.integration
 @pytest.fixture
 def client():
     from fastapi.testclient import TestClient

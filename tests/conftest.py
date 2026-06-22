@@ -1,21 +1,7 @@
 """Shared test fixtures and configuration."""
-import asyncio
-from typing import AsyncGenerator
 import pytest
-import pytest_asyncio
 from app.core.config import settings
 from app.db.models import User, ApiKey, ModelConfig
-
-
-# ============================================================
-# Test Settings Override
-# ============================================================
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create event loop for async tests."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
 
 
 # ============================================================

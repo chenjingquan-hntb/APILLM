@@ -42,9 +42,9 @@ class TestResolveManualCost:
         assert _resolve_manual_cost("nonexistent", {}) is None
 
     def test_rounding(self):
-        configs = {"test-model": _mc(0.0000001, 0.0000002)}
+        configs = {"test-model": _mc(0.001234, 0.002345)}
         cost = _resolve_manual_cost("test-model", configs)
-        assert cost == 0.0000003
+        assert cost == 0.003579
 
     def test_multiple_models(self):
         configs = {

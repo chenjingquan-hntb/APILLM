@@ -4,6 +4,19 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from app.services.price_fetcher import _nested_get
 
 
+class MockResponse:
+    """Simple response mock — json() is sync (matches httpx.Response behavior)."""
+    def __init__(self, json_data, status_code=200):
+        self.status_code = status_code
+        self._json_data = json_data
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._json_data
+
+
 # ============================================================
 # _nested_get (pure logic)
 # ============================================================
@@ -62,18 +75,16 @@ def mock_upstream():
 async def test_fetch_one_success(mock_upstream):
     from app.services.price_fetcher import _fetch_one
 
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
+    mock_resp = MockResponse({
         "object": "list",
         "data": [
             {"id": "gpt-4o", "pricing": {"prompt": 0.005, "completion": 0.015}},
             {"id": "gpt-4o-mini", "pricing": {"prompt": 0.00015, "completion": 0.0006}},
         ],
-    }
+    })
 
     with patch("app.services.price_fetcher._price_client") as mock_client:
-        mock_client.get.return_value = mock_response
+        mock_client.get = AsyncMock(return_value=mock_resp)
         results = await _fetch_one(mock_upstream)
 
     assert len(results) == 2
@@ -108,17 +119,15 @@ async def test_fetch_one_http_error(mock_upstream):
 async def test_fetch_one_zero_prices(mock_upstream):
     from app.services.price_fetcher import _fetch_one
 
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
+    mock_resp = MockResponse({
         "object": "list",
         "data": [
             {"id": "free-model", "pricing": {"prompt": 0, "completion": 0}},
         ],
-    }
+    })
 
     with patch("app.services.price_fetcher._price_client") as mock_client:
-        mock_client.get.return_value = mock_response
+        mock_client.get = AsyncMock(return_value=mock_resp)
         results = await _fetch_one(mock_upstream)
 
     assert len(results) == 1
@@ -136,17 +145,15 @@ async def test_fetch_one_custom_field_config(mock_upstream):
         "completion_price_field": "cost.output",
     }
 
-    mock_response = AsyncMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {
+    mock_resp = MockResponse({
         "object": "list",
         "data": [
             {"model_name": "custom-model", "cost": {"input": 0.001, "output": 0.002}},
         ],
-    }
+    })
 
     with patch("app.services.price_fetcher._price_client") as mock_client:
-        mock_client.get.return_value = mock_response
+        mock_client.get = AsyncMock(return_value=mock_resp)
         results = await _fetch_one(mock_upstream)
 
     assert len(results) == 1

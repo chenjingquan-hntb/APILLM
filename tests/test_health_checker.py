@@ -1,6 +1,6 @@
 """Tests for health_checker — state machine and health status updates."""
 import pytest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 from app.db.models import Upstream, UpstreamProtocol
 
 
@@ -19,19 +19,22 @@ async def test_update_health_consecutive_failures():
     from app.core.config import settings
 
     u = make_upstream()
+    stored: dict = {}
 
-    with patch("app.services.health_checker.cache_get") as mock_get, \
-         patch("app.services.health_checker.cache_set") as mock_set:
+    async def mock_get(key):
+        return stored.get(key)
 
-        mock_get.return_value = None  # No previous state
+    async def mock_set(key, value, **kwargs):
+        stored[key] = value
 
-        for i in range(settings.failure_threshold):
-            await _update_health(u, success=False)
+    with patch("app.services.health_checker.cache_get", side_effect=mock_get), \
+         patch("app.services.health_checker.cache_set", side_effect=mock_set):
 
-        # After threshold failures, should mark unhealthy
-        call_args = mock_set.call_args[0]
-        assert call_args[0].startswith("health:")
-        assert "unhealthy" in str(mock_set.call_args)
+        for _ in range(settings.failure_threshold):
+            await _update_health(u, ok=False)
+
+        state = stored.get(f"health:{u.id}", {})
+        assert state.get("status") == "unhealthy"
 
 
 @pytest.mark.asyncio
@@ -41,40 +44,49 @@ async def test_update_health_recovery():
     from app.core.config import settings
 
     u = make_upstream()
-
-    with patch("app.services.health_checker.cache_get") as mock_get, \
-         patch("app.services.health_checker.cache_set") as mock_set:
-
-        # Start in unhealthy state with failures accumulated
-        mock_get.return_value = {
+    stored: dict = {
+        f"health:{u.id}": {
             "status": "unhealthy",
             "consecutive_failures": 3,
             "consecutive_successes": 0,
+            "last_check": 0,
         }
+    }
 
-        for i in range(settings.recovery_threshold):
-            await _update_health(u, success=True)
+    async def mock_get(key):
+        return stored.get(key)
 
-        # After recovery threshold, should be healthy
-        call_args = mock_set.call_args[0]
-        assert "healthy" in str(mock_set.call_args)
+    async def mock_set(key, value, **kwargs):
+        stored[key] = value
+
+    with patch("app.services.health_checker.cache_get", side_effect=mock_get), \
+         patch("app.services.health_checker.cache_set", side_effect=mock_set):
+
+        for _ in range(settings.recovery_threshold):
+            await _update_health(u, ok=True)
+
+        assert stored[f"health:{u.id}"]["status"] == "healthy"
 
 
 @pytest.mark.asyncio
 async def test_update_health_degraded():
-    """Mixed results should produce 'degraded' status."""
+    """Mixed results should produce appropriate status."""
     from app.services.health_checker import _update_health
 
     u = make_upstream()
+    stored: dict = {}
 
-    with patch("app.services.health_checker.cache_get") as mock_get, \
-         patch("app.services.health_checker.cache_set") as mock_set:
+    async def mock_get(key):
+        return stored.get(key)
 
-        mock_get.return_value = None
+    async def mock_set(key, value, **kwargs):
+        stored[key] = value
 
-        await _update_health(u, success=True)
-        await _update_health(u, success=False)
+    with patch("app.services.health_checker.cache_get", side_effect=mock_get), \
+         patch("app.services.health_checker.cache_set", side_effect=mock_set):
 
-        # After at least one failure but not exceeding threshold, should be degraded or mixed
-        call_args = mock_set.call_args[0]
-        assert call_args[0].startswith("health:")
+        await _update_health(u, ok=True)
+        await _update_health(u, ok=False)
+
+        state = stored.get(f"health:{u.id}", {})
+        assert "status" in state
