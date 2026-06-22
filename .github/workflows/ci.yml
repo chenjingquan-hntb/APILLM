@@ -178,9 +178,13 @@ jobs:
           python scripts/smoke_test_phase2.py
         timeout-minutes: 5
 
+      - name: Create admin token for health check
+        run: |
+          echo "ADMIN_TOKEN=$(python scripts/ci_helpers.py)" >> $GITHUB_ENV
+
       - name: Comprehensive health check
         run: |
-          python scripts/healthcheck.py --verbose; ec=$?; if [ $ec -ge 2 ]; then exit $ec; fi
+          python scripts/healthcheck.py --verbose --admin-token "$ADMIN_TOKEN" || test $? -lt 2
         timeout-minutes: 3
 
       - name: Run integration pytest (requires DB)
