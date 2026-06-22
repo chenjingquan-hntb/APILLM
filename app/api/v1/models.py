@@ -107,7 +107,7 @@ async def list_models(
     manual_price_result = await session.execute(
         select(ModelConfig).where(
             ModelConfig.model_id.in_(list(model_upstreams.keys())),
-            ModelConfig.is_enabled == True,
+            ModelConfig.is_enabled,
         )
     )
     manual_configs: dict[str, ModelConfig] = {

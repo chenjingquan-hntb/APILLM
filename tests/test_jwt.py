@@ -44,9 +44,10 @@ class TestAccessToken:
         payload = (
             '{"alg":"HS256","typ":"JWT"}'
             + "."
-            + _b64_encode(f'{{"sub":1,"role":"user","iat":0,"exp":1}}'.encode())
+            + _b64_encode('{"sub":1,"role":"user","iat":0,"exp":1}'.encode())
         )
-        import hashlib, hmac
+        import hashlib
+        import hmac
         from app.core.config import settings
         sig = _b64_encode(
             hmac.new(settings.secret_key.encode(), payload.encode(), hashlib.sha256).digest()

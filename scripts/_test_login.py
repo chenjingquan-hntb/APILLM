@@ -1,5 +1,6 @@
 """测试 /v1/models 的完整链路"""
-import asyncio, httpx
+import asyncio
+import httpx
 
 async def main():
     async with httpx.AsyncClient() as c:

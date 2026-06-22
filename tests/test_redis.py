@@ -41,7 +41,7 @@ class TestRedisInit:
 class TestRedisClose:
     @pytest.mark.asyncio
     async def test_close_cleanup(self):
-        with patch("app.services.redis.aioredis") as mock_redis:
+        with patch("app.services.redis.aioredis") as _:
             mock_client = AsyncMock()
             mock_pool = MagicMock()
 

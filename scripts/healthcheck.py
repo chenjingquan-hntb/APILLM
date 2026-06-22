@@ -239,7 +239,7 @@ async def main():
     args = parser.parse_args()
 
     os.environ["HEALTHCHECK_BASE"] = args.endpoint
-    print(f"LLM Relay 全面健康检查")
+    print("LLM Relay 全面健康检查")
     print(f"{'=' * 50}")
     print(f"端点: {args.endpoint}")
     print(f"时间: {time.strftime('%Y-%m-%d %H:%M:%S')}")
