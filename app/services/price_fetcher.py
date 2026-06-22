@@ -47,7 +47,20 @@ async def _fetch_one(upstream: Upstream) -> list[dict]:
         logger.warning("price_fetch_failed", upstream=upstream.name, exc_info=True)
         return []
 
+    if models_data:
+        first_model = models_data[0]
+        logger.debug(
+            "price_fetch_sample_raw",
+            upstream=upstream.name,
+            first_model_keys=list(first_model.keys()),
+            first_model_sample=str(first_model)[:300],
+            using_model_field=model_field,
+            using_prompt_field=prompt_field or "(未配置)",
+            using_completion_field=completion_field or "(未配置)",
+        )
+
     results: list[dict] = []
+    zero_count = 0
     for entry in models_data:
         model_id = _nested_get(entry, model_field)
         if model_id is None:
@@ -55,15 +68,24 @@ async def _fetch_one(upstream: Upstream) -> list[dict]:
         prompt_price = _nested_get(entry, prompt_field) if prompt_field else 0.0
         completion_price = _nested_get(entry, completion_field) if completion_field else 0.0
         try:
+            p = float(prompt_price) if prompt_price else 0.0
+            c = float(completion_price) if completion_price else 0.0
             results.append({
                 "model": str(model_id),
-                "prompt": float(prompt_price) if prompt_price else 0.0,
-                "completion": float(completion_price) if completion_price else 0.0,
+                "prompt": p,
+                "completion": c,
             })
+            if p == 0.0 and c == 0.0:
+                zero_count += 1
         except (ValueError, TypeError):
             continue
 
-    logger.info("price_fetch_ok", upstream=upstream.name, models_count=len(results))
+    logger.info(
+        "price_fetch_ok",
+        upstream=upstream.name,
+        models_count=len(results),
+        zero_price_count=zero_count,
+    )
     return results
 
 

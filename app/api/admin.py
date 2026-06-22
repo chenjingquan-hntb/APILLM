@@ -23,6 +23,8 @@ from app.db.models import (
 from app.services.price_fetcher import fetch_all, store_pricing
 from app.services.health_checker import check_all
 from app.services.redis import get_redis, PRICE_KEY_FMT, HEALTH_KEY
+from app.services.pricing_sync import sync_pricing_to_db
+from app.db.base import async_session_factory
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -349,6 +351,19 @@ async def trigger_price_fetch(
     except Exception as e:
         logger.error("admin_price_fetch_failed", error=str(e))
         raise AppError(500, f"价格抓取失败: {e}")
+
+
+@router.post("/prices/sync")
+async def trigger_pricing_sync(
+    admin: Annotated[User, _admin],
+):
+    """从 newcli /api/pricing 同步定价到 ModelConfig 表。"""
+    try:
+        result = await sync_pricing_to_db(async_session_factory)
+        return {"status": "ok", **result}
+    except Exception as e:
+        logger.error("admin_pricing_sync_failed", error=str(e))
+        raise AppError(500, f"定价同步失败: {e}")
 
 
 @router.get("/prices")

@@ -17,15 +17,21 @@ from app.services.proxy.base import http_client
 from app.services.redis import init_redis, close_redis
 from app.services.price_fetcher import run_price_fetch_loop, close_price_client
 from app.services.health_checker import run_health_loop, close_health_client
+from app.services.pricing_sync import run_pricing_sync_loop
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging(settings.debug)
-    await init_redis()
+    redis_ok = await init_redis()
+    if not redis_ok:
+        logger.warning("redis_unavailable_on_startup", message="App will start but price/health features degraded")
     tasks: list[asyncio.Task] = []
-    tasks.append(asyncio.create_task(run_price_fetch_loop(async_session_factory)))
-    tasks.append(asyncio.create_task(run_health_loop(async_session_factory)))
+    if redis_ok:
+        tasks.append(asyncio.create_task(run_price_fetch_loop(async_session_factory)))
+        tasks.append(asyncio.create_task(run_health_loop(async_session_factory)))
+    # pricing_sync 不依赖 Redis，始终启动；首次循环会自动执行同步
+    tasks.append(asyncio.create_task(run_pricing_sync_loop(async_session_factory)))
     try:
         yield
     finally:
@@ -66,6 +72,6 @@ app.include_router(chat_router, prefix="/v1")
 app.include_router(models_router, prefix="/v1")
 
 # 静态文件 — 托管前端 Dashboard
-web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "Web")
+web_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend", "dist")
 if os.path.isdir(web_dir):
     app.mount("/", StaticFiles(directory=web_dir, html=True), name="web")

@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Any
 from urllib.parse import urlparse
 import redis.asyncio as aioredis
@@ -11,6 +12,9 @@ HEALTH_KEY = "health:{}"       # health:{upstream_id}
 _pool: aioredis.ConnectionPool | None = None
 _client: aioredis.Redis | None = None
 
+_last_reconnect_attempt: float = 0.0
+_RECONNECT_COOLDOWN = 5.0  # seconds between reconnect attempts
+
 
 def _sanitize_redis_url(url: str) -> str:
     """Extract host:port from Redis URL, hiding password."""
@@ -21,29 +25,59 @@ def _sanitize_redis_url(url: str) -> str:
         return "<unknown>"
 
 
-async def init_redis() -> None:
+async def init_redis() -> bool:
+    """Initialize Redis connection pool. Returns True on success, False on failure."""
     global _pool, _client
-    _pool = aioredis.ConnectionPool.from_url(settings.redis_url, decode_responses=True)
-    _client = aioredis.Redis(connection_pool=_pool)
-    await _client.ping()
-    logger.info("redis_connected", host=_sanitize_redis_url(settings.redis_url))
+    try:
+        _pool = aioredis.ConnectionPool.from_url(settings.redis_url, decode_responses=True)
+        _client = aioredis.Redis(connection_pool=_pool)
+        await _client.ping()
+        logger.info("redis_connected", host=_sanitize_redis_url(settings.redis_url))
+        return True
+    except Exception as e:
+        logger.warning("redis_init_failed", error=str(e), url=_sanitize_redis_url(settings.redis_url))
+        _client = None
+        if _pool:
+            try:
+                await _pool.disconnect()
+            except Exception:
+                pass
+            _pool = None
+        return False
 
 
 async def close_redis() -> None:
     global _pool, _client
     if _client:
-        await _client.aclose()
+        try:
+            await _client.aclose()
+        except Exception:
+            pass
         _client = None
     if _pool:
-        await _pool.disconnect()
+        try:
+            await _pool.disconnect()
+        except Exception:
+            pass
         _pool = None
     logger.info("redis_disconnected")
 
 
 async def get_redis() -> aioredis.Redis:
-    global _client, _pool
+    global _client, _pool, _last_reconnect_attempt
+
+    # Cooldown guard: avoid reconnect storm when Redis is down
+    now = time.monotonic()
+    if _client is None and now - _last_reconnect_attempt < _RECONNECT_COOLDOWN:
+        raise RuntimeError("Redis not initialized (cooldown)")
+
     if _client is None:
-        raise RuntimeError("Redis not initialized")
+        _last_reconnect_attempt = now
+        ok = await init_redis()
+        if not ok:
+            raise RuntimeError("Redis not initialized")
+        return _client
+
     try:
         await _client.ping()
     except Exception:
@@ -59,7 +93,10 @@ async def get_redis() -> aioredis.Redis:
             except Exception:
                 pass
             _pool = None
-        await init_redis()
+        _last_reconnect_attempt = time.monotonic()
+        ok = await init_redis()
+        if not ok:
+            raise RuntimeError("Redis not initialized")
     return _client
 
 
