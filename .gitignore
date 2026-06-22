@@ -11,3 +11,4 @@ build/
 !**/.codewhale/constitution.json
 .deepseek/
 frontend-dist/
+logs_*

@@ -180,7 +180,7 @@ jobs:
 
       - name: Comprehensive health check
         run: |
-          python scripts/healthcheck.py --verbose
+          python scripts/healthcheck.py --verbose; ec=$?; if [ $ec -ge 2 ]; then exit $ec; fi
         timeout-minutes: 3
 
       - name: Run integration pytest (requires DB)

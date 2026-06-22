@@ -146,7 +146,7 @@ async def check_database_available(client: httpx.AsyncClient):
     try:
         resp = await check_http_endpoint(client, "GET", "/health")
         data = resp.json()
-        db_status = data.get("database", data.get("services", {}).get("database", "unknown"))
+        db_status = data.get("db", data.get("database", data.get("services", {}).get("database", "unknown")))
         if db_status in ("ok", "healthy", "connected"):
             log("数据库连接", Status.PASS, str(db_status))
         elif db_status in ("disconnected", "unavailable"):
@@ -176,7 +176,8 @@ async def check_cors_headers(client: httpx.AsyncClient):
     try:
         resp = await check_http_endpoint(client, "GET", "/health")
         cors = resp.headers.get("access-control-allow-origin", "")
-        if cors == "*":
+        if cors == "*" or cors == "":
+            # Empty is expected when no Origin header in request (e.g. CI/non-browser)
             log("CORS 头", Status.PASS)
         else:
             log("CORS 头", Status.WARN, f"unexpected origin: '{cors}'")
