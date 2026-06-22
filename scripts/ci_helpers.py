@@ -9,10 +9,10 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
 logging.getLogger("app").setLevel(logging.WARNING)
 
-from app.db.base import async_session_factory
-from app.db.models import User
-from app.services.auth import hash_password
-from app.services.jwt import create_access_token
+from app.db.base import async_session_factory  # noqa: E402
+from app.db.models import User  # noqa: E402
+from app.services.auth import hash_password  # noqa: E402
+from app.services.jwt import create_access_token  # noqa: E402
 
 
 async def main():
