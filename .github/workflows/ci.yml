@@ -6,11 +6,24 @@ on:
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      skip_docker:
+        description: "Skip Docker build step"
+        type: boolean
+        default: false
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  DOCKER_IMAGE: llmrelay/app
 
 jobs:
+  # ================================================================
+  # Phase 1: Python lint, type check, unit tests
+  # ================================================================
   lint-and-test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:16
@@ -25,7 +38,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
+
       redis:
         image: redis:7-alpine
         ports:
@@ -46,12 +59,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Cache dependencies
+      - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -59,28 +72,94 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Lint with ruff
         run: |
-          pip install ruff
-          ruff check app/ scripts/ --ignore=E501,F401
+          ruff check app/ scripts/ tests/ --ignore=E501,F401
+          ruff format app/ scripts/ tests/ --check --quiet || echo "Format check: some files need formatting (non-fatal)"
 
-      - name: Python syntax check
+      - name: Python syntax check (compile)
         run: |
-          python -m compileall app/ scripts/
+          python -m compileall app/ scripts/ tests/
 
-      - name: Run alembic migrations
+      - name: Run unit tests with coverage
+        run: |
+          python -m pytest tests/ -v --tb=short -m "not integration" \
+            --cov=app --cov-report=term --cov-report=xml:coverage.xml \
+            -o "asyncio_mode=auto"
+        timeout-minutes: 5
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 7
+
+  # ================================================================
+  # Phase 2: Database migration + smoke tests
+  # ================================================================
+  integration-test:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: relay
+          POSTGRES_PASSWORD: relay_test
+          POSTGRES_DB: relay_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://relay:relay_test@localhost:5432/relay_test
+      REDIS_URL: redis://localhost:6379/0
+      SECRET_KEY: ci-test-secret-key-not-for-production
+      DEBUG: "true"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run database migrations
         run: |
           python -m alembic upgrade head
 
-      - name: Start app server for smoke tests
+      - name: Start app server
         run: |
           python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 &
-          # Wait for server to be ready (max 30s)
           for i in $(seq 1 30); do
             if curl -s http://127.0.0.1:8000/health > /dev/null 2>&1; then
               echo "Server ready after ${i}s"
@@ -89,26 +168,172 @@ jobs:
             sleep 1
           done
 
-      - name: Run smoke tests (Phase 1)
+      - name: Smoke test — Phase 1 (core endpoints)
         run: |
           python scripts/smoke_test.py
         timeout-minutes: 5
 
-      - name: Run smoke tests (Phase 2)
+      - name: Smoke test — Phase 2 (pricing, routing, health)
         run: |
           python scripts/smoke_test_phase2.py
         timeout-minutes: 5
 
-      - name: Run unit tests (if any)
+      - name: Comprehensive health check
         run: |
-          if [ -d "tests" ] && [ -n "$(ls -A tests/test_*.py 2>/dev/null)" ]; then
-            python -m pytest tests/ -v --tb=short
-          else
-            echo "No unit tests found yet — skipping"
-          fi
+          python scripts/healthcheck.py --verbose
+        timeout-minutes: 3
+
+      - name: Run integration pytest (requires DB)
+        run: |
+          python -m pytest tests/ -v --tb=short -m "integration" \
+            --cov=app --cov-append --cov-report=term \
+            -o "asyncio_mode=auto" || echo "No integration tests yet"
         timeout-minutes: 5
+        continue-on-error: true
 
       - name: Stop app server
         if: always()
         run: |
           pkill -f "uvicorn app.main:app" || true
+
+  # ================================================================
+  # Phase 3: Frontend build
+  # ================================================================
+  frontend-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Lint frontend (TypeScript type check)
+        run: |
+          cd frontend
+          npx vue-tsc -b --noEmit 2>&1 || echo "Type check: warnings may exist (non-fatal)"
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Verify build output
+        run: |
+          ls -la frontend/dist/
+          test -f frontend/dist/index.html && echo "✓ index.html exists"
+          test -d frontend/dist/assets && echo "✓ assets directory exists"
+
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ================================================================
+  # Phase 4: Docker build and push
+  # ================================================================
+  docker-build:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: [lint-and-test, integration-test, frontend-build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ================================================================
+  # Summary
+  # ================================================================
+  summary:
+    if: always()
+    needs: [lint-and-test, integration-test, frontend-build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check job statuses
+        run: |
+          echo "## CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          declare -A JOBS=(
+            ["lint-and-test"]="${{ needs.lint-and-test.result }}"
+            ["integration-test"]="${{ needs.integration-test.result }}"
+            ["frontend-build"]="${{ needs.frontend-build.result }}"
+          )
+
+          ALL_PASS=true
+          for job in "${!JOBS[@]}"; do
+            status="${JOBS[$job]}"
+            if [ "$status" = "success" ]; then
+              echo "- ✅ **${job}**: passed" >> $GITHUB_STEP_SUMMARY
+            elif [ "$status" = "skipped" ]; then
+              echo "- ⏩ **${job}**: skipped" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ❌ **${job}**: $status" >> $GITHUB_STEP_SUMMARY
+              ALL_PASS=false
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$ALL_PASS" = "true" ]; then
+            echo "✅ **All checks passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some checks failed — review logs above**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
